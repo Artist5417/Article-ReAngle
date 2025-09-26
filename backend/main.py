@@ -85,6 +85,8 @@ async def process(
             'rewritten': rewritten
         }
     except Exception as e:
+        print(f"❌ 处理错误: {str(e)}")
+        print(f"错误类型: {type(e)}")
         return JSONResponse({'error': f'处理失败: {str(e)}'}, status_code=500)
 
 def open_browser():

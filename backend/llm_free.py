@@ -135,11 +135,11 @@ async def rewrite_with_style(summary: str, prompt: str = "改写成新闻报道�
     messages = [
         {
             "role": "system",
-            "content": "你是一个专业的文章改写专家。请根据用户的要求，在完整保留原文所有条目和结构的基础上，按照指定的风格和立场重新组织表达。确保不遗漏任何条目。"
+            "content": "你是一个专业的文本改写工具。用户会给你一段文字和一个改写要求，你需要按照要求对这段文字进行加工处理，输出一段新的文字。要求：1) 保留原文的核心内容和要点；2) 严格按照用户的要求进行改写；3) 输出完整的改写结果，不要评论原文。"
         },
         {
             "role": "user",
-            "content": f"{rewrite_instruction}\n\n原文内容（请完整保留所有条目）：\n{summary}"
+            "content": f"改写要求：{prompt}\n\n原文：\n{summary}\n\n请按照要求改写上述文字："
         }
     ]
     

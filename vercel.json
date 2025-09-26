@@ -7,10 +7,10 @@
     }
   ],
   "routes": [
-    { "src": "/process", "dest": "/api/index.py" },
     { "src": "/api/(.*)", "dest": "/api/index.py" },
+    { "src": "/process", "dest": "/api/index.py" },
     { "src": "/static/(.*)", "dest": "/frontend/$1" },
-    { "src": "/", "dest": "/frontend/index.html" }
+    { "src": "/(.*)", "dest": "/frontend/index.html" }
   ]
 }
 

@@ -103,9 +103,11 @@ async function processArticle() {
             body: formData
         });
         
+        // 检查响应状态
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || '处理失败');
+            const errorText = await response.text();
+            console.error('服务器错误:', response.status, errorText);
+            throw new Error(`服务器错误 (${response.status}): ${errorText.substring(0, 100)}...`);
         }
         
         const result = await response.json();

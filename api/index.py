@@ -2,7 +2,6 @@
 Vercel serverless function entry point
 """
 import os
-import sys
 import json
 import requests
 from fastapi import FastAPI, UploadFile, File, Form

@@ -10,7 +10,7 @@ import webbrowser
 import threading
 import time
 from extractors import extract_text_from_url, extract_text_from_docx, extract_text_from_pdf
-from llm_free import summarize_text, rewrite_with_style
+from llm_free import rewrite_text
 
 app = FastAPI(title='Article ReAngle')
 
@@ -77,12 +77,11 @@ async def process(
         return JSONResponse({'error': 'Empty content after extraction'}, status_code=400)
 
     try:
-        summary = await summarize_text(raw_text, api_key=api_key)
-        rewritten = await rewrite_with_style(summary, prompt=prompt, api_key=api_key)
+        rewritten = await rewrite_text(raw_text, prompt, api_key=api_key)
 
         return {
             'original': raw_text,
-            'summary': summary,
+            'summary': raw_text,  # 不再需要单独的summary
             'rewritten': rewritten
         }
     except Exception as e:

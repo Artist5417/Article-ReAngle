@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Article ReAngle - 洗稿程序</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📝 Article ReAngle</h1>
+            <p>智能洗稿程序 - 保留核心信息，改变表达方式</p>
+        </header>
+
+        <main>
+            <!-- 输入区域 -->
+            <section class="input-section">
+                <h2>1. 提交"稿"</h2>
+                <div class="input-tabs">
+                    <button class="tab-btn active" onclick="switchTab('text')">粘贴文本</button>
+                    <button class="tab-btn" onclick="switchTab('file')">上传文件</button>
+                    <button class="tab-btn" onclick="switchTab('url')">输入链接</button>
+                </div>
+
+                <!-- 文本输入 -->
+                <div id="text-input" class="input-panel active">
+                    <textarea id="inputText" placeholder="请粘贴您要改写的文章内容..."></textarea>
+                </div>
+
+                <!-- 文件上传 -->
+                <div id="file-input" class="input-panel">
+                    <div class="file-upload">
+                        <input type="file" id="fileInput" accept=".txt,.docx,.pdf">
+                        <label for="fileInput" class="file-label">
+                            <span>📁 选择文件</span>
+                            <small>支持 TXT、Word、PDF 格式</small>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- URL输入 -->
+                <div id="url-input" class="input-panel">
+                    <input type="url" id="urlInput" placeholder="请输入文章链接...">
+                </div>
+            </section>
+
+                    <!-- 洗稿设置 -->
+                    <section class="style-section">
+                        <h2>2. "洗"稿设置</h2>
+                        <div class="style-controls">
+                            <div class="control-row">
+                                <div class="control-group half-width">
+                                    <label for="promptInput">请输入改写要求：</label>
+                                    <textarea id="promptInput" placeholder="例如：学术化表达、轻松幽默语气、支持环保政策、批判技术垄断"></textarea>
+                                </div>
+                                <div class="control-group half-width">
+                                    <label for="apiKeyInput">API Key（可选）：</label>
+                                    <input type="password" id="apiKeyInput" placeholder="可选：输入API Key，或设置环境变量OPENAI_API_KEY">
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+            <!-- 处理按钮 -->
+            <section class="action-section">
+                <button id="processBtn" onclick="processArticle()">🚀 开始洗稿</button>
+                <div id="loading" class="loading hidden">
+                    <div class="spinner"></div>
+                    <span>正在处理中，请稍候...</span>
+                </div>
+            </section>
+
+            <!-- 结果显示 -->
+            <section id="result-section" class="result-section hidden">
+                <h2>3. 洗稿结果</h2>
+                
+                <div class="result-tabs">
+                    <button class="tab-btn active" onclick="switchResultTab('rewritten')">新文章</button>
+                    <button class="tab-btn" onclick="switchResultTab('compare')">对比视图</button>
+                    <button class="tab-btn" onclick="switchResultTab('summary')">要点总结</button>
+                </div>
+
+                <!-- 新文章 -->
+                <div id="rewritten-panel" class="result-panel active">
+                    <div class="result-content">
+                        <div class="result-header">
+                            <h3>改写后的文章</h3>
+                            <div class="result-actions">
+                                <button onclick="copyText('rewritten')">📋 复制</button>
+                                <button onclick="downloadText('rewritten', 'txt')">💾 下载TXT</button>
+                                <button onclick="downloadText('rewritten', 'md')">📄 下载Markdown</button>
+                            </div>
+                        </div>
+                        <div id="rewrittenContent" class="content-display"></div>
+                    </div>
+                </div>
+
+                <!-- 对比视图 -->
+                <div id="compare-panel" class="result-panel">
+                    <div class="compare-content">
+                        <div class="compare-column">
+                            <h3>原文</h3>
+                            <div id="originalContent" class="content-display"></div>
+                        </div>
+                        <div class="compare-column">
+                            <h3>新文</h3>
+                            <div id="rewrittenContentCompare" class="content-display"></div>
+                        </div>
+                    </div>
+                    <div class="similarity-info">
+                        <span>相似度：<span id="similarityScore">--</span>%</span>
+                    </div>
+                </div>
+
+                <!-- 要点总结 -->
+                <div id="summary-panel" class="result-panel">
+                    <div class="result-content">
+                        <h3>原文要点总结</h3>
+                        <div id="summaryContent" class="content-display"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

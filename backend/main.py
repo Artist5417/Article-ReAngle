@@ -14,8 +14,12 @@ from llm_free import summarize_text, rewrite_with_style
 
 app = FastAPI(title='Article ReAngle')
 
+# 计算前端目录的绝对路径（避免在无服务器/不同工作目录下找不到相对路径）
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FRONTEND_DIR = os.path.normpath(os.path.join(BASE_DIR, "..", "frontend"))
+
 # 添加静态文件服务
-app.mount("/static", StaticFiles(directory="../frontend"), name="static")
+app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
 app.add_middleware(
     CORSMiddleware,
@@ -40,7 +44,7 @@ def health():
 async def read_root():
     """返回主页面"""
     try:
-        with open('../frontend/index.html', 'r', encoding='utf-8') as f:
+        with open(os.path.join(FRONTEND_DIR, 'index.html'), 'r', encoding='utf-8') as f:
             return HTMLResponse(content=f.read())
     except FileNotFoundError:
         return HTMLResponse(content="<h1>Article ReAngle</h1><p>Frontend files not found. Please check the file path.</p>", status_code=404)

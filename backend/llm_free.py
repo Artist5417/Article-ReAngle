@@ -19,32 +19,12 @@ if not OPENAI_API_KEY:
 
 async def call_openai(messages: list, model: str = "gpt-4o-mini", api_key: str = None) -> str:
     """使用OpenAI API"""
-    # 优先级：用户输入 > 环境变量 > 默认值
-    if api_key:
-        key_to_use = api_key
-    else:
-        # 多种方式尝试读取环境变量
-        key_to_use = (os.getenv("OPENAI_API_KEY", "") or 
-                     os.environ.get("OPENAI_API_KEY", "") or 
-                     os.environ.get("OPENAI_API_KEY", ""))
-        
-        # 如果还是空，尝试从系统环境变量读取
-        if not key_to_use:
-            import subprocess
-            try:
-                result = subprocess.run(['powershell', '-Command', 'echo $env:OPENAI_API_KEY'], 
-                                      capture_output=True, text=True, timeout=5)
-                if result.returncode == 0:
-                    key_to_use = result.stdout.strip()
-            except:
-                pass
-    
     # 检查API Key是否有效
-    if not key_to_use or key_to_use.strip() == "":
-        return "错误：未提供OpenAI API Key。请在界面中输入或设置环境变量OPENAI_API_KEY。"
+    if not api_key or api_key.strip() == "":
+        return "错误：未提供OpenAI API Key。请在界面中输入API Key。"
     
     # 清理API Key，移除可能的空白字符
-    key_to_use = key_to_use.strip()
+    key_to_use = api_key.strip()
     
     try:
         # 使用requests库作为备用方案

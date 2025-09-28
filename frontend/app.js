@@ -9,6 +9,32 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeApp() {
     // 初始化应用
     console.log('Article ReAngle 初始化完成');
+    
+    // 文件选择处理
+    const fileInput = document.getElementById('fileInput');
+    const selectedFile = document.getElementById('selected-file');
+    const fileName = document.getElementById('fileName');
+    const removeFile = document.getElementById('removeFile');
+    
+    if (fileInput && selectedFile && fileName && removeFile) {
+        // 文件选择事件
+        fileInput.addEventListener('change', function(e) {
+            console.log('文件选择事件触发', e.target.files.length);
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                console.log('选择的文件:', file.name);
+                fileName.textContent = file.name;
+                selectedFile.classList.remove('hidden');
+            }
+        });
+        
+        // 移除文件事件
+        removeFile.addEventListener('click', function() {
+            console.log('移除文件');
+            fileInput.value = '';
+            selectedFile.classList.add('hidden');
+        });
+    }
 }
 
 // 切换输入标签页
@@ -263,25 +289,3 @@ function downloadText(type, format) {
     URL.revokeObjectURL(url);
 }
 
-// 文件选择处理
-document.addEventListener('DOMContentLoaded', function() {
-    const fileInput = document.getElementById('fileInput');
-    const selectedFile = document.getElementById('selected-file');
-    const fileName = document.getElementById('fileName');
-    const removeFile = document.getElementById('removeFile');
-    
-    // 文件选择事件
-    fileInput.addEventListener('change', function(e) {
-        if (e.target.files.length > 0) {
-            const file = e.target.files[0];
-            fileName.textContent = file.name;
-            selectedFile.classList.remove('hidden');
-        }
-    });
-    
-    // 移除文件事件
-    removeFile.addEventListener('click', function() {
-        fileInput.value = '';
-        selectedFile.classList.add('hidden');
-    });
-});

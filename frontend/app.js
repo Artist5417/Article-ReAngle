@@ -262,3 +262,26 @@ function downloadText(type, format) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+
+// 文件选择处理
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('fileInput');
+    const selectedFile = document.getElementById('selected-file');
+    const fileName = document.getElementById('fileName');
+    const removeFile = document.getElementById('removeFile');
+    
+    // 文件选择事件
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            const file = e.target.files[0];
+            fileName.textContent = file.name;
+            selectedFile.classList.remove('hidden');
+        }
+    });
+    
+    // 移除文件事件
+    removeFile.addEventListener('click', function() {
+        fileInput.value = '';
+        selectedFile.classList.add('hidden');
+    });
+});

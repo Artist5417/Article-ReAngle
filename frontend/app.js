@@ -17,6 +17,8 @@ function initializeApp() {
     const removeFile = document.getElementById('removeFile');
     
     if (fileInput && selectedFile && fileName && removeFile) {
+        console.log('文件选择元素找到，绑定事件监听器');
+        
         // 文件选择事件
         fileInput.addEventListener('change', function(e) {
             console.log('文件选择事件触发', e.target.files.length);
@@ -25,6 +27,7 @@ function initializeApp() {
                 console.log('选择的文件:', file.name);
                 fileName.textContent = file.name;
                 selectedFile.classList.remove('hidden');
+                console.log('文件显示区域应该已显示');
             }
         });
         
@@ -33,6 +36,13 @@ function initializeApp() {
             console.log('移除文件');
             fileInput.value = '';
             selectedFile.classList.add('hidden');
+        });
+    } else {
+        console.log('文件选择元素未找到:', {
+            fileInput: !!fileInput,
+            selectedFile: !!selectedFile,
+            fileName: !!fileName,
+            removeFile: !!removeFile
         });
     }
 }

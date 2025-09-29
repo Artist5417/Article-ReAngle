@@ -180,5 +180,6 @@ async def process(
         print(f"❌ 处理错误: {str(e)}")
         return JSONResponse({'error': f'处理失败: {str(e)}'}, status_code=500)
 
-# Vercel需要这个变量
-handler = app
+# Vercel处理函数
+def handler(request):
+    return app(request)

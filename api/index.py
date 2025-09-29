@@ -129,6 +129,10 @@ def rewrite_text_with_openai(text: str, prompt: str, api_key: str) -> str:
 async def root():
     return {"message": "Article ReAngle API is running"}
 
+@app.get('/test')
+async def test():
+    return {"status": "working", "message": "Test endpoint is working"}
+
 @app.post('/process')
 async def process(
     input_text: Optional[str] = Form(None),
@@ -179,7 +183,3 @@ async def process(
     except Exception as e:
         print(f"❌ 处理错误: {str(e)}")
         return JSONResponse({'error': f'处理失败: {str(e)}'}, status_code=500)
-
-# Vercel处理函数
-def handler(request):
-    return app(request)

@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.responses import JSONResponse
 from typing import Optional
 import requests
 import os
@@ -11,8 +11,10 @@ from readability import Document
 import docx
 import pypdf
 
+# 创建FastAPI应用
 app = FastAPI(title='Article ReAngle')
 
+# 添加CORS中间件
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['*'],
@@ -24,20 +26,36 @@ app.add_middleware(
 async def extract_text_from_url(url: str) -> str:
     """Extract main content from URL"""
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url, timeout=30.0)
-            response.raise_for_status()
-            
-        # Use readability to extract main content
-        doc = Document(response.text)
-        soup = BeautifulSoup(doc.summary(), 'html.parser')
+        print(f"开始提取URL内容: {url}")
         
-        # Clean up the text
+        # 确保URL有协议
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+            print(f"添加协议后的URL: {url}")
+        
+        async with httpx.AsyncClient() as client:
+            print("发送HTTP请求...")
+            response = await client.get(url, timeout=30.0)
+            print(f"HTTP响应状态: {response.status_code}")
+            response.raise_for_status()
+        
+        print("开始解析HTML内容...")
+        doc = Document(response.text)
+        summary = doc.summary()
+        print(f"Readability提取的摘要长度: {len(summary)}")
+        
+        soup = BeautifulSoup(summary, 'html.parser')
         text = soup.get_text()
+        
+        # 清理文本
         lines = [line.strip() for line in text.split('\n') if line.strip()]
-        return '\n'.join(lines)
+        result = '\n'.join(lines)
+        print(f"最终提取的文本长度: {len(result)}")
+        
+        return result
         
     except Exception as e:
+        print(f"URL提取错误: {str(e)}")
         return f"Error extracting from URL: {str(e)}"
 
 async def extract_text_from_docx(file: UploadFile) -> str:
@@ -45,14 +63,10 @@ async def extract_text_from_docx(file: UploadFile) -> str:
     try:
         content = await file.read()
         doc = docx.Document(io.BytesIO(content))
-        
-        text_parts = []
+        text = []
         for paragraph in doc.paragraphs:
-            if paragraph.text.strip():
-                text_parts.append(paragraph.text.strip())
-        
-        return '\n'.join(text_parts)
-        
+            text.append(paragraph.text)
+        return '\n'.join(text)
     except Exception as e:
         return f"Error extracting from DOCX: {str(e)}"
 
@@ -61,27 +75,59 @@ async def extract_text_from_pdf(file: UploadFile) -> str:
     try:
         content = await file.read()
         pdf_reader = pypdf.PdfReader(io.BytesIO(content))
-        
-        text_parts = []
+        text = []
         for page in pdf_reader.pages:
-            text = page.extract_text()
-            if text.strip():
-                text_parts.append(text.strip())
-        
-        return '\n'.join(text_parts)
-        
+            text.append(page.extract_text())
+        return '\n'.join(text)
     except Exception as e:
         return f"Error extracting from PDF: {str(e)}"
 
-@app.get('/')
-def read_root():
-    """返回主页面"""
+def rewrite_text_with_openai(text: str, prompt: str, api_key: str) -> str:
+    """使用OpenAI API重写文本"""
     try:
-        frontend_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'index.html')
-        with open(frontend_path, 'r', encoding='utf-8') as f:
-            return HTMLResponse(content=f.read())
-    except FileNotFoundError:
-        return HTMLResponse(content="<h1>Article ReAngle</h1><p>Frontend files not found.</p>", status_code=404)
+        if not api_key:
+            return "错误：未提供OpenAI API Key"
+        
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+        
+        data = {
+            'model': 'gpt-3.5-turbo',
+            'messages': [
+                {
+                    'role': 'system',
+                    'content': '你是一个文本重写工具。用户给你一段文字和一个要求，你需要把这段文字保留关键信息的同时，按照用户输入的要求重新写一遍。'
+                },
+                {
+                    'role': 'user',
+                    'content': f'原文：{text}\n\n改写要求：{prompt}'
+                }
+            ],
+            'max_tokens': 2000,
+            'temperature': 0.7
+        }
+        
+        response = requests.post(
+            'https://api.openai.com/v1/chat/completions',
+            headers=headers,
+            json=data,
+            timeout=60
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            return result['choices'][0]['message']['content']
+        else:
+            return f"OpenAI API错误: {response.status_code} - {response.text}"
+            
+    except Exception as e:
+        return f"处理错误: {str(e)}"
+
+@app.get('/')
+async def root():
+    return {"message": "Article ReAngle API is running"}
 
 @app.post('/process')
 async def process(
@@ -91,78 +137,48 @@ async def process(
     api_key: Optional[str] = Form(None),
     file: Optional[UploadFile] = File(None)
 ):
-    """处理文本重写请求"""
     try:
-        if not any([input_text, url, file]):
-            return JSONResponse({'error': 'No input provided'}, status_code=400)
-
+        print(f"收到处理请求 - 文本: {bool(input_text)}, URL: {bool(url)}, 文件: {bool(file)}")
+        
+        # 获取原始文本
         raw_text = ''
+        
         if input_text:
             raw_text = input_text
+            print(f"使用文本输入，长度: {len(raw_text)}")
         elif url:
+            print(f"正在处理URL: {url}")
             raw_text = await extract_text_from_url(url)
+            print(f"URL提取结果长度: {len(raw_text)}")
+            print(f"URL提取结果前100字符: {raw_text[:100]}")
         elif file:
+            print(f"正在处理文件: {file.filename}")
             if file.filename.lower().endswith('.docx'):
                 raw_text = await extract_text_from_docx(file)
             elif file.filename.lower().endswith('.pdf'):
                 raw_text = await extract_text_from_pdf(file)
-            else:
-                # 处理其他文本文件
+            else:  # 处理TXT和其他文本文件
                 content = await file.read()
                 raw_text = content.decode('utf-8', errors='ignore')
-
-        if not raw_text.strip():
-            return JSONResponse({'error': 'Empty content after extraction'}, status_code=400)
-
-        # 调用OpenAI API重写文本
-        if not api_key or api_key.strip() == "":
-            return JSONResponse({'error': '未提供OpenAI API Key'}, status_code=400)
-
-        # 调用OpenAI API
-        headers = {
-            "Authorization": f"Bearer {api_key.strip()}",
-            "Content-Type": "application/json"
-        }
+            print(f"文件提取结果长度: {len(raw_text)}")
         
-        messages = [
-            {
-                "role": "system",
-                "content": "你是一个文本重写工具。用户给你一段文字和一个要求，你需要把这段文字保留关键信息的同时，按照用户输入的要求重新写一遍。"
-            },
-            {
-                "role": "user",
-                "content": f"要求：{prompt}\n\n把下面这段文字按要求重写：\n\n{raw_text}"
-            }
-        ]
+        if not raw_text:
+            return JSONResponse({'error': '没有提供有效的输入内容'}, status_code=400)
         
-        request_data = {
-            "model": "gpt-4o-mini",
-            "messages": messages,
-            "max_tokens": 4000,
-            "temperature": 0.7
-        }
+        # 使用OpenAI重写文本
+        print("开始调用OpenAI API...")
+        rewritten = rewrite_text_with_openai(raw_text, prompt, api_key)
+        print(f"重写完成，结果长度: {len(rewritten)}")
         
-        response = requests.post(
-            "https://api.openai.com/v1/chat/completions",
-            headers=headers,
-            json=request_data,
-            timeout=60
-        )
-        
-        if response.status_code == 200:
-            result = response.json()
-            rewritten = result['choices'][0]['message']['content']
-        else:
-            return JSONResponse({'error': f'OpenAI API错误: {response.status_code} - {response.text}'}, status_code=500)
-
         return {
             'original': raw_text,
-            'summary': raw_text,
-            'rewritten': rewritten
+            'rewritten': rewritten,
+            'summary': raw_text
         }
         
     except Exception as e:
         print(f"❌ 处理错误: {str(e)}")
         return JSONResponse({'error': f'处理失败: {str(e)}'}, status_code=500)
 
-# Vercel Python runtime will look for a module-level variable named `app`
+# Vercel需要这个变量
+handler = app

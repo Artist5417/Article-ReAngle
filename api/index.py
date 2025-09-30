@@ -93,20 +93,23 @@ def rewrite_text_with_openai(text: str, prompt: str, api_key: str) -> str:
             'Content-Type': 'application/json'
         }
         
-        # 根据原文长度动态设置max_tokens
+        # 根据原文长度动态设置目标与上限
         text_length = len(text)
-        max_tokens = max(4000, int(text_length * 1.5))  # 至少4000，或原文长度的1.5倍
+        # 目标生成长度：原文约110%，以保证不变短；保底1000
+        target_tokens = max(1000, int(text_length * 1.1))
+        # 上限：不超过20000，避免过短同时允许长文足量生成
+        max_tokens = min(20000, target_tokens)
         
         data = {
             'model': 'gpt-3.5-turbo',
             'messages': [
                 {
                     'role': 'system',
-                    'content': '你是一个专业的文本重写工具。你的任务是：1. 保持原文的详细程度和长度 2. 保留所有重要信息和细节 3. 按照用户要求改变表达方式和观点 4. 确保重写后的文章长度与原文相近。请完整重写，不要省略内容。'
+                    'content': '你是一个专业的文本重写工具。严格要求：1) 保持原文信息量和细节完整；2) 输出长度需与原文接近（±10%内），不得明显缩短；3) 按用户要求调整风格/立场/措辞；4) 生成完整可读的新文章而非提纲或点评。'
                 },
                 {
                     'role': 'user',
-                    'content': f'请重写以下文章，要求：{prompt}\n\n原文：\n{text}\n\n请保持原文的详细程度和长度，完整重写：'
+                    'content': f'请严格按要求重写，目标长度≈原文±10%。改写要求：{prompt}\n\n原文：\n{text}\n\n请在保持信息完整的前提下，输出与原文长度接近的完整新文：'
                 }
             ],
             'max_tokens': max_tokens,

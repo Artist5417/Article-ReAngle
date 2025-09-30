@@ -93,19 +93,23 @@ def rewrite_text_with_openai(text: str, prompt: str, api_key: str) -> str:
             'Content-Type': 'application/json'
         }
         
+        # 根据原文长度动态设置max_tokens
+        text_length = len(text)
+        max_tokens = max(4000, int(text_length * 1.5))  # 至少4000，或原文长度的1.5倍
+        
         data = {
             'model': 'gpt-3.5-turbo',
             'messages': [
                 {
                     'role': 'system',
-                    'content': '你是一个文本重写工具。用户给你一段文字和一个要求，你需要把这段文字保留关键信息的同时，按照用户输入的要求重新写一遍。'
+                    'content': '你是一个专业的文本重写工具。你的任务是：1. 保持原文的详细程度和长度 2. 保留所有重要信息和细节 3. 按照用户要求改变表达方式和观点 4. 确保重写后的文章长度与原文相近。请完整重写，不要省略内容。'
                 },
                 {
                     'role': 'user',
-                    'content': f'原文：{text}\n\n改写要求：{prompt}'
+                    'content': f'请重写以下文章，要求：{prompt}\n\n原文：\n{text}\n\n请保持原文的详细程度和长度，完整重写：'
                 }
             ],
-            'max_tokens': 2000,
+            'max_tokens': max_tokens,
             'temperature': 0.7
         }
         

@@ -9,8 +9,12 @@ import os
 import webbrowser
 import threading
 import time
-from extractors import extract_text_from_url, extract_text_from_docx, extract_text_from_pdf
-from llm_free import rewrite_text
+from .extractors import (
+    extract_text_from_url,
+    extract_text_from_docx,
+    extract_text_from_pdf,
+)
+from .llm_free import rewrite_text
 
 app = FastAPI(title='Article ReAngle')
 

@@ -2,7 +2,7 @@ import httpx
 from bs4 import BeautifulSoup
 from readability import Document
 import docx
-import PyPDF2
+import pypdf
 import io
 from typing import Optional
 from fastapi import UploadFile
@@ -46,7 +46,7 @@ async def extract_text_from_pdf(file: UploadFile) -> str:
     """Extract text from PDF file"""
     try:
         content = await file.read()
-        pdf_reader = PyPDF2.PdfReader(io.BytesIO(content))
+        pdf_reader = pypdf.PdfReader(io.BytesIO(content))
         
         text_parts = []
         for page in pdf_reader.pages:

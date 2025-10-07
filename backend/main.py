@@ -44,6 +44,12 @@ class ProcessRequest(BaseModel):
 def health():
     return {'status': 'ok'}
 
+@app.get('/env')
+def env_check():
+    """诊断用：仅报告是否存在 OPENAI_API_KEY，不返回具体值"""
+    has_key = bool(os.getenv('OPENAI_API_KEY', '').strip())
+    return {'has_openai_api_key': has_key}
+
 @app.get('/', response_class=HTMLResponse)
 async def read_root():
     """返回主页面"""
@@ -126,5 +132,5 @@ if __name__ == '__main__':
     print("-" * 50)
     
     port = int(os.getenv('PORT', '8000'))
-    # 生产环境禁用 reload，多 worker 由平台管理
-    uvicorn.run('main:app', host='0.0.0.0', port=port, reload=not is_production, workers=1)
+    # 直接传入 app 实例，避免因模块名不同导致的 'Could not import module "main"'
+    uvicorn.run(app, host='0.0.0.0', port=port, reload=not is_production, workers=1)

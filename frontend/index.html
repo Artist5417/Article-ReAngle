@@ -14,44 +14,47 @@
         </header>
 
         <main>
-            <!-- 输入区域 -->
-            <section class="input-section">
-                <h2>1. 提交"稿"</h2>
-                <div class="input-tabs">
-                    <button class="tab-btn active" onclick="switchTab('text')">粘贴文本</button>
-                    <button class="tab-btn" onclick="switchTab('file')">上传文件</button>
-                    <button class="tab-btn" onclick="switchTab('url')">输入链接</button>
-                </div>
-
-                <!-- 文本输入 -->
-                <div id="text-input" class="input-panel active">
-                    <textarea id="inputText" placeholder="请粘贴您要改写的文章内容..."></textarea>
-                </div>
-
-                <!-- 文件上传 -->
-                <div id="file-input" class="input-panel">
-                    <div class="file-upload">
-                        <input type="file" id="fileInput" accept=".txt,.docx,.pdf">
-                        <label for="fileInput" class="file-label">
-                            <span>📁 选择文件</span>
-                            <small>支持 TXT、Word、PDF 格式</small>
-                        </label>
-                        <div id="selected-file" class="selected-file hidden">
-                            <span id="fileName"></span>
-                            <button type="button" id="removeFile" class="remove-file">×</button>
+            <div class="two-column">
+                <!-- 左列：输入与设置 -->
+                <div class="left-pane">
+                    <!-- 输入区域 -->
+                    <section class="input-section">
+                        <h2>提交"稿"</h2>
+                        <div class="input-tabs">
+                            <button class="tab-btn active" onclick="switchTab('text')">粘贴文本</button>
+                            <button class="tab-btn" onclick="switchTab('file')">上传文件</button>
+                            <button class="tab-btn" onclick="switchTab('url')">输入链接</button>
                         </div>
-                    </div>
-                </div>
 
-                <!-- URL输入 -->
-                <div id="url-input" class="input-panel">
-                    <input type="url" id="urlInput" placeholder="请输入文章链接...">
-                </div>
-            </section>
+                        <!-- 文本输入 -->
+                        <div id="text-input" class="input-panel active">
+                            <textarea id="inputText" placeholder="请粘贴您要改写的文章内容..."></textarea>
+                        </div>
+
+                        <!-- 文件上传 -->
+                        <div id="file-input" class="input-panel">
+                            <div class="file-upload">
+                                <input type="file" id="fileInput" accept=".txt,.docx,.pdf">
+                                <label for="fileInput" class="file-label">
+                                    <span>📁 选择文件</span>
+                                    <small>支持 TXT、Word、PDF 格式</small>
+                                </label>
+                                <div id="selected-file" class="selected-file hidden">
+                                    <span id="fileName"></span>
+                                    <button type="button" id="removeFile" class="remove-file">×</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- URL输入 -->
+                        <div id="url-input" class="input-panel">
+                            <input type="url" id="urlInput" placeholder="请输入文章链接...">
+                        </div>
+                    </section>
 
                     <!-- 洗稿设置 -->
                     <section class="style-section">
-                        <h2>2. "洗"稿设置</h2>
+                        <h2>"洗"稿设置</h2>
                         <div class="style-controls">
                             <div class="control-row">
                                 <div class="control-group half-width">
@@ -66,65 +69,68 @@
                         </div>
                     </section>
 
-            <!-- 处理按钮 -->
-            <section class="action-section">
-                <button id="processBtn" onclick="processArticle()">🚀 开始洗稿</button>
-                <div id="loading" class="loading hidden">
-                    <div class="spinner"></div>
-                    <span>正在处理中，请稍候...</span>
-                </div>
-            </section>
-
-            <!-- 结果显示 -->
-            <section id="result-section" class="result-section hidden">
-                <h2>3. 洗稿结果</h2>
-                
-                <div class="result-tabs">
-                    <button class="tab-btn active" onclick="switchResultTab('rewritten')">新文章</button>
-                    <button class="tab-btn" onclick="switchResultTab('compare')">对比视图 <span class="coming-soon">待开发</span></button>
-                    <button class="tab-btn" onclick="switchResultTab('summary')">要点总结 <span class="coming-soon">待开发</span></button>
+                    <!-- 处理按钮 -->
+                    <section class="action-section">
+                        <button id="processBtn" onclick="processArticle()">🚀 开始洗稿</button>
+                        <div id="loading" class="loading hidden">
+                            <div class="spinner"></div>
+                            <span>正在处理中，请稍候...</span>
+                        </div>
+                    </section>
                 </div>
 
-                <!-- 新文章 -->
-                <div id="rewritten-panel" class="result-panel active">
-                    <div class="result-content">
-                        <div class="result-header">
-                            <h3>改写后的文章</h3>
-                            <div class="result-actions">
-                                <button onclick="copyText('rewritten')">📋 复制</button>
-                                <button onclick="downloadText('rewritten', 'txt')">💾 下载TXT</button>
-                                <button onclick="downloadText('rewritten', 'md')">📄 下载Markdown</button>
+                <!-- 右列：实时结果/对比 -->
+                <div class="right-pane">
+                    <section id="result-section" class="result-section">
+                        <h2>洗稿结果</h2>
+                        <div class="result-tabs">
+                            <button class="tab-btn active" onclick="switchResultTab('rewritten')">新文章</button>
+                            <button class="tab-btn" onclick="switchResultTab('compare')">对比视图</button>
+                            <button class="tab-btn" onclick="switchResultTab('summary')">要点总结</button>
+                        </div>
+
+                        <!-- 新文章 -->
+                        <div id="rewritten-panel" class="result-panel active">
+                            <div class="result-content">
+                                <div class="result-header">
+                                    <h3>改写后的文章</h3>
+                                    <div class="result-actions">
+                                        <button onclick="copyText('rewritten')">📋 复制</button>
+                                        <button onclick="downloadText('rewritten', 'txt')">💾 下载TXT</button>
+                                        <button onclick="downloadText('rewritten', 'md')">📄 下载Markdown</button>
+                                    </div>
+                                </div>
+                                <div id="rewrittenContent" class="content-display"></div>
                             </div>
                         </div>
-                        <div id="rewrittenContent" class="content-display"></div>
-                    </div>
-                </div>
 
-                <!-- 对比视图 -->
-                <div id="compare-panel" class="result-panel">
-                    <div class="compare-content">
-                        <div class="compare-column">
-                            <h3>原文</h3>
-                            <div id="originalContent" class="content-display"></div>
+                        <!-- 对比视图 -->
+                        <div id="compare-panel" class="result-panel">
+                            <div class="compare-content">
+                                <div class="compare-column">
+                                    <h3>原文</h3>
+                                    <div id="originalContent" class="content-display"></div>
+                                </div>
+                                <div class="compare-column">
+                                    <h3>新文</h3>
+                                    <div id="rewrittenContentCompare" class="content-display"></div>
+                                </div>
+                            </div>
+                            <div class="similarity-info">
+                                <span>相似度：<span id="similarityScore">--</span>%</span>
+                            </div>
                         </div>
-                        <div class="compare-column">
-                            <h3>新文</h3>
-                            <div id="rewrittenContentCompare" class="content-display"></div>
-                        </div>
-                    </div>
-                    <div class="similarity-info">
-                        <span>相似度：<span id="similarityScore">--</span>%</span>
-                    </div>
-                </div>
 
-                <!-- 要点总结 -->
-                <div id="summary-panel" class="result-panel">
-                    <div class="result-content">
-                        <h3>原文要点总结</h3>
-                        <div id="summaryContent" class="content-display"></div>
-                    </div>
+                        <!-- 要点总结 -->
+                        <div id="summary-panel" class="result-panel">
+                            <div class="result-content">
+                                <h3>原文要点总结</h3>
+                                <div id="summaryContent" class="content-display"></div>
+                            </div>
+                        </div>
+                    </section>
                 </div>
-            </section>
+            </div>
         </main>
     </div>
 

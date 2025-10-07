@@ -42,6 +42,19 @@ main {
     box-shadow: 0 20px 40px rgba(0,0,0,0.1);
 }
 
+/* 左右布局 */
+.two-column {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.left-pane, .right-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
 section {
     margin-bottom: 30px;
 }
@@ -386,6 +399,12 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* 响应式设计 */
+@media (max-width: 992px) {
+    .two-column {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 768px) {
     .container {
         padding: 10px;

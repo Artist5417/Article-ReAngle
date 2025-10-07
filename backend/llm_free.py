@@ -10,21 +10,15 @@ import requests
 from typing import Optional
 
 # OpenAI配置
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")  # 优先使用环境变量，如果没有则使用用户输入的API Key
 OPENAI_BASE_URL = "https://api.openai.com/v1"
 
-# 如果环境变量为空，尝试从系统环境变量重新读取
-if not OPENAI_API_KEY:
-    OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-
-async def call_openai(messages: list, model: str = "gpt-4o-mini", api_key: str = None) -> str:
+async def call_openai(messages: list, model: str = "gpt-4o-mini", api_key: str | None = None) -> str:
     """使用OpenAI API"""
-    # 检查API Key是否有效
-    if not api_key or api_key.strip() == "":
-        return "错误：未提供OpenAI API Key。请在界面中输入API Key。"
-    
-    # 清理API Key，移除可能的空白字符
-    key_to_use = api_key.strip()
+    # 兼容：优先使用传入的 api_key；若为空，则回退到环境变量
+    key_from_env = os.getenv("OPENAI_API_KEY", "").strip()
+    key_to_use = (api_key or "").strip() or key_from_env
+    if not key_to_use:
+        return "错误：未提供 OpenAI API Key（既没有界面输入，也没有环境变量 OPENAI_API_KEY）。"
     
     try:
         # 使用requests库作为备用方案

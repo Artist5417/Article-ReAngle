@@ -107,15 +107,20 @@ if __name__ == '__main__':
     else:
         print("❌ 未找到环境变量 OPENAI_API_KEY")
     
-    # 在后台线程中打开浏览器
-    browser_thread = threading.Thread(target=open_browser)
-    browser_thread.daemon = True
-    browser_thread.start()
+    # Render/生产环境不自动打开浏览器，仅本地开发时打开
+    is_production = bool(os.getenv("PORT")) or os.getenv("RENDER") == "true"
+    if not is_production:
+        browser_thread = threading.Thread(target=open_browser)
+        browser_thread.daemon = True
+        browser_thread.start()
     
     print("✅ 服务器启动完成！")
-    print("🌐 浏览器将自动打开...")
-    print("💡 如果没有自动打开，请手动访问: http://localhost:8000")
+    if not is_production:
+        print("🌐 浏览器将自动打开...")
+        print("💡 如果没有自动打开，请手动访问: http://localhost:8000")
     print("⏹️  按 Ctrl+C 停止服务器")
     print("-" * 50)
     
-    uvicorn.run('main:app', host='0.0.0.0', port=8000, reload=True, workers=1)
+    port = int(os.getenv('PORT', '8000'))
+    # 生产环境禁用 reload，多 worker 由平台管理
+    uvicorn.run('main:app', host='0.0.0.0', port=port, reload=not is_production, workers=1)

@@ -27,12 +27,16 @@ if not os.getenv("OPENAI_API_KEY"):
 
 
 import time
-from .extractors import (
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from extractors import (
     extract_text_from_url,
     extract_text_from_docx,
     extract_text_from_pdf,
 )
-from .llm import rewrite_text
+from llm import rewrite_text
 
 app = FastAPI(title='Article ReAngle')
 
@@ -132,16 +136,16 @@ def open_browser():
     print("🌐 浏览器已自动打开: http://localhost:8000")
 
 if __name__ == '__main__':
-    print("🚀 启动 Article ReAngle 洗稿程序...")
-    print("📝 正在启动服务器...")
+    print("启动 Article ReAngle 洗稿程序...")
+    print("正在启动服务器...")
     
     # 强制设置环境变量到当前进程
     api_key = os.getenv("OPENAI_API_KEY", "")
     if api_key:
         os.environ["OPENAI_API_KEY"] = api_key
-        print(f"✅ 环境变量已设置: {api_key[:20]}...")
+        print(f"环境变量已设置: {api_key[:20]}...")
     else:
-        print("❌ 未找到环境变量 OPENAI_API_KEY")
+        print("未找到环境变量 OPENAI_API_KEY")
     
     # Render/生产环境不自动打开浏览器，仅本地开发时打开
     is_production = bool(os.getenv("PORT")) or os.getenv("RENDER") == "true"
@@ -150,11 +154,11 @@ if __name__ == '__main__':
         browser_thread.daemon = True
         browser_thread.start()
     
-    print("✅ 服务器启动完成！")
+    print("服务器启动完成！")
     if not is_production:
-        print("🌐 浏览器将自动打开...")
-        print("💡 如果没有自动打开，请手动访问: http://localhost:8000")
-    print("⏹️  按 Ctrl+C 停止服务器")
+        print("浏览器将自动打开...")
+        print("如果没有自动打开，请手动访问: http://localhost:8000")
+    print("按 Ctrl+C 停止服务器")
     print("-" * 50)
     
     port = int(os.getenv('PORT', '8000'))

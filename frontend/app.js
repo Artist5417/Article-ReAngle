@@ -115,7 +115,9 @@ async function processArticle() {
     processBtn.disabled = true;
     processBtn.textContent = '处理中...';
     loading.classList.remove('hidden');
-    resultSection.classList.add('hidden');
+    
+    // 确保右边界面始终显示，显示处理中状态
+    showProcessingState();
     
     try {
         // 构建FormData
@@ -158,7 +160,7 @@ async function processArticle() {
         
     } catch (error) {
         console.error('处理错误:', error);
-        alert('处理失败: ' + error.message);
+        showErrorState(error.message);
     } finally {
         // 恢复按钮状态
         processBtn.disabled = false;
@@ -209,27 +211,554 @@ function getInputData() {
     return null;
 }
 
+// 显示处理中状态
+function showProcessingState() {
+    const resultSection = document.getElementById('result-section');
+    const rewrittenContent = document.getElementById('rewrittenContent');
+    const originalContent = document.getElementById('originalContent');
+    const summaryContent = document.getElementById('summaryContent');
+    
+    // 确保结果区域显示
+    resultSection.classList.remove('hidden');
+    
+    // 显示处理中状态
+    if (rewrittenContent) {
+        rewrittenContent.innerHTML = '<div class="processing-state"><div class="spinner"></div><p>正在处理中，请稍候...</p></div>';
+    }
+    
+    if (originalContent) {
+        originalContent.innerHTML = '<div class="processing-state"><div class="spinner"></div><p>正在处理中，请稍候...</p></div>';
+    }
+    
+    if (summaryContent) {
+        summaryContent.innerHTML = '<div class="processing-state"><div class="spinner"></div><p>正在处理中，请稍候...</p></div>';
+    }
+    
+    // 滚动到结果区域
+    resultSection.scrollIntoView({ behavior: 'smooth' });
+}
+
+// 显示错误状态
+function showErrorState(errorMessage) {
+    const resultSection = document.getElementById('result-section');
+    const rewrittenContent = document.getElementById('rewrittenContent');
+    const originalContent = document.getElementById('originalContent');
+    const summaryContent = document.getElementById('summaryContent');
+    
+    // 确保结果区域显示
+    resultSection.classList.remove('hidden');
+    
+    // 显示错误状态
+    const errorHtml = `<div class="error-state">
+        <div class="error-icon">❌</div>
+        <h3>处理失败</h3>
+        <p>${errorMessage}</p>
+        <p class="error-hint">请检查网络连接或API Key设置，然后重试。</p>
+    </div>`;
+    
+    if (rewrittenContent) {
+        rewrittenContent.innerHTML = errorHtml;
+    }
+    
+    if (originalContent) {
+        originalContent.innerHTML = errorHtml;
+    }
+    
+    if (summaryContent) {
+        summaryContent.innerHTML = errorHtml;
+    }
+    
+    // 滚动到结果区域
+    resultSection.scrollIntoView({ behavior: 'smooth' });
+}
+
+// 全局变量存储当前结果
+let currentOriginalText = '';
+let currentRewrittenText = '';
+
 // 显示结果
 function displayResults(result) {
     const resultSection = document.getElementById('result-section');
     const originalContent = document.getElementById('originalContent');
     const rewrittenContent = document.getElementById('rewrittenContent');
+    const rewrittenContentCompare = document.getElementById('rewrittenContentCompare');
     const summaryContent = document.getElementById('summaryContent');
     
+    // 存储到全局变量
+    currentOriginalText = result.original || '';
+    currentRewrittenText = result.rewritten || '';
+    
     if (originalContent) {
-        originalContent.textContent = result.original || '';
+        // 原文也显示段落分割线，确保与右边对齐
+        originalContent.innerHTML = renderOriginalWithSeparators(currentOriginalText);
     }
     
     if (rewrittenContent) {
-        rewrittenContent.textContent = result.rewritten || '';
+        rewrittenContent.textContent = currentRewrittenText;
     }
+    
+    if (rewrittenContentCompare) {
+        // 对比视图：直接显示新文章，带段落分割线
+        rewrittenContentCompare.innerHTML = renderRewrittenWithSeparators(currentOriginalText, currentRewrittenText);
+    }
+    
+    // 动态调整分割线位置
+    setTimeout(() => {
+        adjustSeparatorAlignment();
+    }, 100);
     
     if (summaryContent) {
         summaryContent.textContent = result.summary || '';
     }
     
+    // 确保结果区域显示
     resultSection.classList.remove('hidden');
     resultSection.scrollIntoView({ behavior: 'smooth' });
+}
+
+// 分割文本为段落 - 基于内容分割
+function splitIntoParagraphs(text) {
+    if (!text) return [];
+    
+    // 先按双换行符分割
+    let paragraphs = text.split(/\n\s*\n/);
+    
+    // 如果没有双换行符，尝试按句子分割
+    if (paragraphs.length === 1) {
+        const sentences = text.split(/[。！？]/);
+        paragraphs = [];
+        let currentPara = '';
+        
+        for (const sentence of sentences) {
+            if (sentence.trim()) {
+                currentPara += sentence.trim() + '。';
+                // 每3-4个句子组成一个段落
+                if (currentPara.length > 100) {
+                    paragraphs.push(currentPara.trim());
+                    currentPara = '';
+                }
+            }
+        }
+        if (currentPara.trim()) {
+            paragraphs.push(currentPara.trim());
+        }
+    }
+    
+    return paragraphs.map(p => p.trim()).filter(p => p.length > 0);
+}
+
+// 渲染段落对比视图
+function renderAlignedParagraphs(originalText, rewrittenText) {
+    const originalParagraphs = splitIntoParagraphs(originalText);
+    const rewrittenParagraphs = splitIntoParagraphs(rewrittenText);
+    
+    let html = '<div class="paragraph-comparison">';
+    
+    // 计算最大段落数
+    const maxParagraphs = Math.max(originalParagraphs.length, rewrittenParagraphs.length);
+    
+    for (let i = 0; i < maxParagraphs; i++) {
+        const originalPara = originalParagraphs[i] || '';
+        const rewrittenPara = rewrittenParagraphs[i] || '';
+        
+        // 计算段落高度，用于动态调整分割线
+        const originalHeight = originalPara.split('\n').length;
+        const rewrittenHeight = rewrittenPara.split('\n').length;
+        const maxHeight = Math.max(originalHeight, rewrittenHeight);
+        
+        html += `<div class="paragraph-pair" data-paragraph-number="${i + 1}" data-max-height="${maxHeight}">`;
+        
+        // 左边原文段落
+        html += '<div class="paragraph-original">';
+        html += `<div class="paragraph-content" style="min-height: ${maxHeight * 1.6}em;">${escapeHtml(originalPara)}</div>`;
+        html += '</div>';
+        
+        // 右边改写段落
+        html += '<div class="paragraph-rewritten">';
+        if (rewrittenPara) {
+            html += `<div class="paragraph-content" style="min-height: ${maxHeight * 1.6}em;">${highlightParagraphChanges(originalPara, rewrittenPara)}</div>`;
+        } else {
+            html += `<div class="paragraph-content empty-paragraph" style="min-height: ${maxHeight * 1.6}em;"></div>`;
+        }
+        html += '</div>';
+        
+        html += '</div>';
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+// 高亮段落内的变化
+function highlightParagraphChanges(originalPara, rewrittenPara) {
+    if (!originalPara || !rewrittenPara) {
+        return escapeHtml(rewrittenPara);
+    }
+    
+    // 使用更智能的差异检测
+    const diff = computeSmartDiff(originalPara, rewrittenPara);
+    let result = '';
+    
+    for (const part of diff) {
+        if (part.type === 'equal') {
+            result += escapeHtml(part.text);
+        } else if (part.type === 'insert' || part.type === 'replace') {
+            result += `<span class="text-changed">${escapeHtml(part.text)}</span>`;
+        }
+    }
+    
+    return result;
+}
+
+// 智能差异检测
+function computeSmartDiff(text1, text2) {
+    const words1 = text1.split(/(\s+|[，。！？；：""''（）【】])/);
+    const words2 = text2.split(/(\s+|[，。！？；：""''（）【】])/);
+    
+    const diff = [];
+    let i = 0, j = 0;
+    
+    while (i < words1.length || j < words2.length) {
+        if (i >= words1.length) {
+            diff.push({ type: 'insert', text: words2[j] });
+            j++;
+        } else if (j >= words2.length) {
+            diff.push({ type: 'delete', text: words1[i] });
+            i++;
+        } else if (words1[i] === words2[j]) {
+            diff.push({ type: 'equal', text: words1[i] });
+            i++;
+            j++;
+        } else {
+            // 查找最佳匹配
+            const match = findBestMatch(words1, words2, i, j);
+            if (match.distance <= 3) {
+                // 在范围内找到匹配
+                for (let k = i; k < match.index1; k++) {
+                    diff.push({ type: 'delete', text: words1[k] });
+                }
+                for (let k = j; k < match.index2; k++) {
+                    diff.push({ type: 'insert', text: words2[k] });
+                }
+                i = match.index1;
+                j = match.index2;
+            } else {
+                // 直接替换
+                diff.push({ type: 'replace', text: words2[j] });
+                i++;
+                j++;
+            }
+        }
+    }
+    
+    return diff;
+}
+
+// 查找最佳匹配
+function findBestMatch(words1, words2, start1, start2) {
+    let bestMatch = { index1: words1.length, index2: words2.length, distance: Infinity };
+    
+    for (let i = start1 + 1; i < Math.min(start1 + 10, words1.length); i++) {
+        for (let j = start2 + 1; j < Math.min(start2 + 10, words2.length); j++) {
+            if (words1[i] === words2[j]) {
+                const distance = Math.max(i - start1, j - start2);
+                if (distance < bestMatch.distance) {
+                    bestMatch = { index1: i, index2: j, distance };
+                }
+            }
+        }
+    }
+    
+    return bestMatch;
+}
+
+// 计算段落差异
+function computeParagraphDiff(text1, text2) {
+    const words1 = text1.split(/(\s+|[，。！？；：""''（）【】])/);
+    const words2 = text2.split(/(\s+|[，。！？；：""''（）【】])/);
+    
+    const diff = [];
+    let i = 0, j = 0;
+    
+    while (i < words1.length || j < words2.length) {
+        if (i >= words1.length) {
+            diff.push({ type: 'insert', text: words2[j] });
+            j++;
+        } else if (j >= words2.length) {
+            diff.push({ type: 'delete', text: words1[i] });
+            i++;
+        } else if (words1[i] === words2[j]) {
+            diff.push({ type: 'equal', text: words1[i] });
+            i++;
+            j++;
+        } else {
+            // 查找下一个匹配
+            const nextMatch1 = findNextWordMatch(words1, words2, i, j);
+            const nextMatch2 = findNextWordMatch(words2, words1, j, i);
+            
+            if (nextMatch1.distance <= nextMatch2.distance && nextMatch1.distance < 5) {
+                for (let k = i; k < nextMatch1.index; k++) {
+                    diff.push({ type: 'delete', text: words1[k] });
+                }
+                i = nextMatch1.index;
+            } else if (nextMatch2.distance < 5) {
+                for (let k = j; k < nextMatch2.index; k++) {
+                    diff.push({ type: 'insert', text: words2[k] });
+                }
+                j = nextMatch2.index;
+            } else {
+                diff.push({ type: 'replace', text: words2[j] });
+                i++;
+                j++;
+            }
+        }
+    }
+    
+    return diff;
+}
+
+// 查找下一个词匹配
+function findNextWordMatch(words1, words2, start1, start2) {
+    for (let i = start1 + 1; i < Math.min(start1 + 10, words1.length); i++) {
+        for (let j = start2 + 1; j < Math.min(start2 + 10, words2.length); j++) {
+            if (words1[i] === words2[j]) {
+                return { index: i, distance: i - start1 };
+            }
+        }
+    }
+    return { index: words1.length, distance: Infinity };
+}
+
+// HTML转义函数
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// 动态调整分割线对齐
+function adjustSeparatorAlignment() {
+    const originalContent = document.getElementById('originalContent');
+    const rewrittenContent = document.getElementById('rewrittenContentCompare');
+    
+    if (!originalContent || !rewrittenContent) return;
+    
+    const originalBlocks = originalContent.querySelectorAll('.paragraph-block');
+    const rewrittenBlocks = rewrittenContent.querySelectorAll('.paragraph-block');
+    
+    // 确保段落数量一致
+    const maxBlocks = Math.max(originalBlocks.length, rewrittenBlocks.length);
+    
+    // 根据较长段落调整高度，确保分割线对齐
+    for (let i = 0; i < maxBlocks; i++) {
+        const originalBlock = originalBlocks[i];
+        const rewrittenBlock = rewrittenBlocks[i];
+        
+        if (originalBlock && rewrittenBlock) {
+            // 等待内容渲染完成
+            setTimeout(() => {
+                const originalHeight = originalBlock.offsetHeight;
+                const rewrittenHeight = rewrittenBlock.offsetHeight;
+                const maxHeight = Math.max(originalHeight, rewrittenHeight);
+                
+                // 设置最小高度确保对齐
+                if (originalHeight < maxHeight) {
+                    originalBlock.style.minHeight = maxHeight + 'px';
+                }
+                if (rewrittenHeight < maxHeight) {
+                    rewrittenBlock.style.minHeight = maxHeight + 'px';
+                }
+                
+                // 确保分割线位置一致
+                const originalSeparator = originalBlock.querySelector('.paragraph-separator');
+                const rewrittenSeparator = rewrittenBlock.querySelector('.paragraph-separator');
+                
+                if (originalSeparator && rewrittenSeparator) {
+                    // 分割线位置基于较长段落
+                    const separatorPosition = maxHeight + 20; // 20px margin
+                    originalSeparator.style.marginTop = '20px';
+                    rewrittenSeparator.style.marginTop = '20px';
+                }
+            }, 100);
+        }
+    }
+}
+
+// 渲染带分割线的原文
+function renderOriginalWithSeparators(originalText) {
+    const paragraphs = splitIntoParagraphs(originalText);
+    let html = '<div class="paragraphs-with-separators">';
+    
+    for (let i = 0; i < paragraphs.length; i++) {
+        const para = paragraphs[i];
+        html += `<div class="paragraph-block" data-paragraph-index="${i}">`;
+        html += `<div class="paragraph-content">${escapeHtml(para)}</div>`;
+        if (i < paragraphs.length - 1) {
+            html += '<div class="paragraph-separator"></div>';
+        }
+        html += '</div>';
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+// 渲染带分割线的新文
+function renderRewrittenWithSeparators(originalText, rewrittenText) {
+    const originalParagraphs = splitIntoParagraphs(originalText);
+    const rewrittenParagraphs = splitIntoParagraphs(rewrittenText);
+    let html = '<div class="paragraphs-with-separators">';
+    
+    // 确保段落数量一致，以原文段落数量为准
+    const maxParagraphs = Math.max(originalParagraphs.length, rewrittenParagraphs.length);
+    
+    for (let i = 0; i < maxParagraphs; i++) {
+        const originalPara = originalParagraphs[i] || '';
+        const rewrittenPara = rewrittenParagraphs[i] || '';
+        
+        html += `<div class="paragraph-block" data-paragraph-index="${i}">`;
+        if (rewrittenPara) {
+            html += `<div class="paragraph-content">${highlightParagraphChanges(originalPara, rewrittenPara)}</div>`;
+        } else {
+            html += `<div class="paragraph-content empty-paragraph">此段落在改写版本中不存在</div>`;
+        }
+        if (i < maxParagraphs - 1) {
+            html += '<div class="paragraph-separator"></div>';
+        }
+        html += '</div>';
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+// 高亮显示文本变化（保持原有功能）
+function highlightChanges(originalText, rewrittenText) {
+    if (!originalText || !rewrittenText) {
+        return rewrittenText || '';
+    }
+    
+    // 使用段落对比视图
+    return renderAlignedParagraphs(originalText, rewrittenText);
+}
+
+// 高亮单行内的变化
+function highlightLineChanges(originalLine, rewrittenLine) {
+    if (!originalLine || !rewrittenLine) {
+        return rewrittenLine;
+    }
+    
+    // 使用更智能的差异检测
+    const diff = computeDiff(originalLine, rewrittenLine);
+    let result = '';
+    
+    for (const part of diff) {
+        if (part.type === 'equal') {
+            result += part.text;
+        } else if (part.type === 'insert' || part.type === 'replace') {
+            result += `<span class="text-changed">${part.text}</span>`;
+        }
+    }
+    
+    return result;
+}
+
+// 计算文本差异
+function computeDiff(text1, text2) {
+    const words1 = text1.split(/(\s+|[，。！？；：""''（）【】])/);
+    const words2 = text2.split(/(\s+|[，。！？；：""''（）【】])/);
+    
+    const diff = [];
+    let i = 0, j = 0;
+    
+    while (i < words1.length || j < words2.length) {
+        if (i >= words1.length) {
+            // 只有text2有内容，是新增
+            diff.push({ type: 'insert', text: words2[j] });
+            j++;
+        } else if (j >= words2.length) {
+            // 只有text1有内容，是删除
+            diff.push({ type: 'delete', text: words1[i] });
+            i++;
+        } else if (words1[i] === words2[j]) {
+            // 相同内容
+            diff.push({ type: 'equal', text: words1[i] });
+            i++;
+            j++;
+        } else {
+            // 不同内容，检查是否是替换
+            const match1 = findNextMatch(words1, words2, i, j);
+            const match2 = findNextMatch(words2, words1, j, i);
+            
+            if (match1.distance <= match2.distance && match1.distance < 3) {
+                // 在text1中找到匹配
+                for (let k = i; k < match1.index; k++) {
+                    diff.push({ type: 'delete', text: words1[k] });
+                }
+                i = match1.index;
+            } else if (match2.distance < 3) {
+                // 在text2中找到匹配
+                for (let k = j; k < match2.index; k++) {
+                    diff.push({ type: 'insert', text: words2[k] });
+                }
+                j = match2.index;
+            } else {
+                // 没有找到匹配，直接替换
+                diff.push({ type: 'replace', text: words2[j] });
+                i++;
+                j++;
+            }
+        }
+    }
+    
+    return diff;
+}
+
+// 查找下一个匹配
+function findNextMatch(words1, words2, start1, start2) {
+    for (let i = start1 + 1; i < words1.length; i++) {
+        for (let j = start2 + 1; j < words2.length; j++) {
+            if (words1[i] === words2[j]) {
+                return { index: i, distance: i - start1 };
+            }
+        }
+    }
+    return { index: words1.length, distance: Infinity };
+}
+
+// 找到最长公共子序列
+function findLCS(arr1, arr2) {
+    const m = arr1.length;
+    const n = arr2.length;
+    const dp = Array(m + 1).fill().map(() => Array(n + 1).fill(0));
+    
+    // 构建DP表
+    for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+            if (arr1[i-1] === arr2[j-1]) {
+                dp[i][j] = dp[i-1][j-1] + 1;
+            } else {
+                dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
+            }
+        }
+    }
+    
+    // 回溯找到LCS
+    const lcs = [];
+    let i = m, j = n;
+    while (i > 0 && j > 0) {
+        if (arr1[i-1] === arr2[j-1]) {
+            lcs.unshift(arr1[i-1]);
+            i--;
+            j--;
+        } else if (dp[i-1][j] > dp[i][j-1]) {
+            i--;
+        } else {
+            j--;
+        }
+    }
+    
+    return lcs;
 }
 
 // 复制文本
@@ -278,3 +807,4 @@ function downloadText(type) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+

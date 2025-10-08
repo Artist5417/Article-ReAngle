@@ -1,342 +1,133 @@
 # Article ReAngle - 智能洗稿程序
 
-一个基于大语言模型的本地网页应用，用于在保留文章核心信息的前提下，根据用户指定的风格或立场重新组织和表达文章。
+一个基于大语言模型的智能文本重写应用，支持本地和云端部署。程序保留文章核心信息，根据用户指定的风格或立场重新组织和表达文章。用户既可以上传文档、粘贴文字，也可以输入网页链接，程序会自动提取文章主体内容，并结合用户的提示词生成全新的文章。
 
-## 🌐 在线体验
+### 输入与预处理
+用户可以通过三种方式提供文章：
+1. **直接粘贴文本** - 在文本框中直接粘贴要改写的文章内容
+2. **上传文件** - 支持 TXT、Word、PDF 格式的文件上传  
+3. **输入文章 URL** - 由系统自动抓取网页正文内容
 
-**Render 部署地址：** [https://article-reangle.onrender.com/](https://article-reangle.onrender.com/)
+程序会自动进行预处理：
+- **Word 文档**：提取正文段落，保留格式结构
+- **PDF 文件**：优先解析文字层，若遇到扫描件则调用 OCR 技术将图片转为文字
+- **URL 链接**：自动抓取网页主体并过滤掉广告、导航栏等无关部分
 
-## 🚀 本地运行步骤
+经过清洗，所有输入最终统一为一份 **结构化、干净的纯文本**，以便后续模型处理。
 
-1) **安装依赖**
+### 模型处理逻辑
+文章进入模型层后，会按照"两步走"的策略进行处理：
+1. **要点提炼**：调用 LLM 对文章进行总结，提取核心信息与逻辑框架，确保保留主要内容并保持客观中立
+2. **视角改写**：将提炼出的要点与用户提示词结合，根据指定的风格或立场生成新文章
+
+用户提示词既可以控制风格（如"学术化""新闻报道""幽默化"），也可以指定立场（如"支持某政策"或"从消费者角度出发"）。
+
+### 输出与展示
+生成结果会在网页端展示，用户可以直接在线阅读。同时提供多种下载格式：
+- **Word 文档** - 便于编辑和分享
+- **PDF 文件** - 适合正式文档  
+- **Markdown / HTML** - 方便在博客或网站发布
+
+此外，系统支持 **原文与新文的对比视图**，并能计算两者的相似度，帮助用户直观判断改写效果和差异程度。
+
+## 🚀 快速开始
+
+### 部署地址
+- **Render**: https://article-reangle.onrender.com
+- **本地运行**: http://localhost:8000
+
+### 本地运行步骤
+
+1. **安装依赖**：
 ```bash
-python -m pip install -r backend\requirements.txt
+pip install -r backend/requirements.txt
 ```
 
-2) **配置 Key（可选，界面不填时才需要）**
-```powershell
-$env:OPENAI_API_KEY="你的Key"
-```
-
-3) **正确启动（推荐，带热重载）**
+2. **设置环境变量**：
 ```bash
-python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-4) **打开应用**
-- 访问：http://localhost:8000
-
-## 功能特点
-
-### 🎯 核心功能
-- **智能洗稿**：保留原文核心信息，改变表达方式和风格
-- **多输入方式**：支持文本粘贴、文件上传、URL抓取
-- **灵活控制**：可调节改写强度和指定风格立场
-- **实时对比**：原文与新文对比，显示相似度
-
-### 📝 输入方式
-1. **直接粘贴文本** - 在网页上直接粘贴要改写的文章
-2. **上传文件** - 支持 TXT、Word、PDF 格式
-3. **输入URL** - 自动抓取网页正文内容
-
-### 🎨 风格控制
-- **预设风格**：新闻报道、学术论文、轻松幽默、正式商务、科普文章
-- **自定义风格**：用户可输入任意风格要求
-- **立场控制**：支持指定特定立场或角度
-- **改写强度**：从轻度改写到完全重写
-
-### 📊 输出功能
-- **在线阅读**：网页端直接展示结果
-- **对比视图**：原文与新文并排对比
-- **相似度计算**：显示改写前后的相似度
-- **多格式导出**：支持 TXT、Markdown 格式下载
-
-## 快速开始
-
-### 环境要求
-- Python 3.8+
-- 现代浏览器（Chrome、Firefox、Edge等）
-
-### 安装运行
-
-1. **克隆项目**
-```bash
-git clone <repository-url>
-cd Article-ReAngle
-```
-
-2. **配置API Key（推荐）**
-```bash
-# Windows PowerShell（推荐）
-$env:OPENAI_API_KEY="your_openai_api_key_here"
+# Windows PowerShell
+$env:OPENAI_API_KEY="your-api-key-here"
 
 # Windows CMD
-set OPENAI_API_KEY=your_openai_api_key_here
+set OPENAI_API_KEY=your-api-key-here
 
-# Linux/macOS
-export OPENAI_API_KEY="your_openai_api_key_here"
+# Linux/Mac
+export OPENAI_API_KEY="your-api-key-here"
 ```
 
-3. **一键启动**
+3. **启动应用**：
 ```bash
-# Windows用户
-start.bat
-
-# 或手动启动
-cd backend
-pip install -r requirements.txt
-python main.py
+python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
 ```
 
-4. **访问应用**
-- 打开 `frontend/index.html` 在浏览器中
-- 后端API运行在 `http://localhost:8000`
+4. **访问应用**：
+打开浏览器访问 http://localhost:8000
 
-### LLM配置
-
-程序支持多种LLM配置方式，**推荐使用环境变量**：
-
-#### 方式1：环境变量配置（推荐）
-
-**Windows PowerShell:**
-```powershell
-# 临时设置（当前会话有效）
-$env:OPENAI_API_KEY="your_openai_api_key_here"
-
-# 永久设置（需要重启终端）
-[Environment]::SetEnvironmentVariable("OPENAI_API_KEY", "your_openai_api_key_here", "User")
-```
-
-**Windows CMD:**
-```cmd
-# 临时设置
-set OPENAI_API_KEY=your_openai_api_key_here
-
-# 永久设置
-setx OPENAI_API_KEY "your_openai_api_key_here"
-```
-
-**Linux/macOS:**
-```bash
-# 临时设置
-export OPENAI_API_KEY="your_openai_api_key_here"
-
-# 永久设置（添加到 ~/.bashrc 或 ~/.zshrc）
-echo 'export OPENAI_API_KEY="your_openai_api_key_here"' >> ~/.bashrc
-```
-
-#### 方式2：界面输入（备选）
-如果未设置环境变量，程序会在界面中提示输入API Key。
-
-#### 方式3：使用本地Ollama
-```bash
-# 安装Ollama
-# 下载地址：https://ollama.ai/
-
-# 设置环境变量（可选，默认localhost:11434）
-set OLLAMA_BASE_URL=http://localhost:11434
-```
-
-## 使用说明
-
-### 基本流程
-
-1. **提交"稿"**
-   - 选择输入方式（文本/文件/URL）
-   - 输入或上传要改写的文章
-
-2. **设置"洗"稿参数**
-   - 选择或自定义风格要求
-   - 设置立场要求（可选）
-   - 调节改写强度（0.1-1.0）
-
-3. **获取结果**
-   - 查看改写后的文章
-   - 对比原文与新文
-   - 查看要点总结
-   - 下载结果文件
-
-### 高级功能
-
-- **相似度分析**：自动计算原文与新文的相似度
-- **要点提取**：智能总结原文核心要点
-- **多格式导出**：支持多种文件格式下载
-
-## 技术架构
-
-### 后端技术栈
-- **FastAPI** - 现代Python Web框架
-- **Pydantic** - 数据验证和序列化
-- **httpx** - 异步HTTP客户端
-- **BeautifulSoup** - HTML解析
-- **python-docx** - Word文档处理
-- **PyPDF2** - PDF文档处理
-
-### 前端技术栈
-- **原生HTML/CSS/JavaScript** - 轻量级前端
-- **响应式设计** - 支持多设备访问
-- **现代UI** - 简洁美观的用户界面
-
-### LLM集成
-- **OpenAI API** - 云端大语言模型
-- **Ollama** - 本地大语言模型
-- **灵活配置** - 支持多种模型切换
-
-## 项目结构
+## 📁 项目结构
 
 ```
 Article-ReAngle/
-├── backend/                 # 后端代码
-│   ├── main.py             # FastAPI主应用
-│   ├── extractors.py       # 文本提取模块
-│   ├── llm.py             # LLM处理模块
-│   ├── utils.py           # 工具函数
-│   └── requirements.txt    # Python依赖
-├── frontend/               # 前端代码
-│   ├── index.html         # 主页面
-│   ├── styles.css         # 样式文件
-│   └── app.js             # JavaScript逻辑
-├── start.bat              # Windows启动脚本
-└── README.md              # 项目说明
+├── backend/                 # 后端服务
+│   ├── main.py            # FastAPI 主应用入口，处理所有 HTTP 请求
+│   ├── llm.py             # AI 文本重写服务，调用 OpenAI API
+│   ├── extractors.py       # 内容提取器，处理 URL/文件/PDF 文本提取
+│   ├── utils.py            # 工具函数，文本相似度计算和格式化
+│   └── requirements.txt    # Python 依赖包列表
+├── frontend/               # 前端界面
+│   ├── index.html         # 主页面，左右分栏布局
+│   ├── app.js             # 前端逻辑，处理用户交互和 API 调用
+│   └── styles.css         # 样式文件，现代化渐变背景和响应式设计
+├── api/                    # 备用 API 文件
+├── requirements.txt        # 根依赖文件，指向 backend/requirements.txt
+├── render.yaml            # Render 部署配置
+├── vercel.json            # Vercel 部署配置
+└── README.md              # 项目文档
 ```
 
-## 开发说明
+## 🔄 程序运行流程
 
-### 本地开发
-
-1. **后端开发**
-```bash
-cd backend
-pip install -r requirements.txt
-python main.py
+### 1. 应用启动流程
+```
+用户启动命令 → backend/main.py (FastAPI 应用) → 加载环境变量 → 配置中间件 → 启动 Uvicorn 服务器 → 监听端口
 ```
 
-2. **前端开发**
-- 直接编辑 `frontend/` 目录下的文件
-- 使用现代浏览器打开 `index.html`
+### 2. 用户请求处理流程
+```
+用户访问 → backend/main.py @app.get('/') → 返回 frontend/index.html → 加载前端资源 → 用户界面准备就绪
+```
 
-### API接口
+### 3. 洗稿处理流程
+```
+用户输入 → frontend/app.js → POST 请求到 /process → backend/main.py @app.post('/process') → 
+根据输入类型调用 extractors.py → backend/llm.py rewrite_text() → 调用 OpenAI API → 
+返回改写结果 → frontend/app.js displayResults() → 展示结果给用户
+```
 
-- `GET /health` - 健康检查
-- `POST /process` - 处理文章
+### 4. 文件间依赖关系
+```
+backend/main.py (主入口)
+├── 导入 backend/extractors.py (内容提取)
+├── 导入 backend/llm.py (AI 重写)
+└── 服务 frontend/ 静态文件 (用户界面)
+```
 
-### 环境变量
+## 🛠️ 技术栈
 
-- `OPENAI_API_KEY` - OpenAI API密钥
-- `OLLAMA_BASE_URL` - Ollama服务地址（默认：http://localhost:11434）
+- **后端**: FastAPI, Uvicorn, OpenAI API, httpx, BeautifulSoup4, python-docx, pypdf
+- **前端**: 原生 HTML/CSS/JavaScript, 响应式设计
+- **部署**: Render (主要), Vercel (备用)
 
 ## 常见问题
 
-### Q: 如何处理大文件？
+**Q: 如何处理大文件？**  
 A: 程序会自动限制输入长度，建议单次处理不超过3000字符。
 
-### Q: 支持哪些文件格式？
+**Q: 支持哪些文件格式？**  
 A: 目前支持 TXT、Word(.docx)、PDF 格式。
 
-### Q: 如何提高改写质量？
+**Q: 如何提高改写质量？**  
 A: 可以尝试调整改写强度，或提供更详细的风格和立场要求。
-
-### Q: 程序运行缓慢怎么办？
-A: 建议使用本地Ollama模型，或检查网络连接（使用OpenAI API时）。
-
-## 许可证
-
-MIT License
-
-## 贡献
-
-欢迎提交Issue和Pull Request！
 
 ---
 
 **Article ReAngle** - 让文章改写变得简单高效！
-
-A local web app powered by LLMs that rewrites articles while preserving key information, enabling users to generate new versions with customizable style, perspective, and viewpoints.
-
----
-
-## 1. Program Overview
-
-This program is a **localhost web application** powered by **Large Language Models (LLMs)**.  
-Core objectives:  
-
-- Preserve the main information of the article  
-- Adjust **style/perspective** according to user requirements  
-- Generate a newly expressed version of the article  
-
-Supported input methods: paste text / upload files / provide URL.  
-Output methods: online reading, export as Word/PDF/Markdown.  
-
----
-
-## 2. Input and Preprocessing
-
-### Input Methods
-
-1. **Paste text directly**  
-2. **Upload files** (TXT / Word / PDF)  
-3. **Enter article URL** (automatically extract the main body)  
-
-### Preprocessing Logic
-
-- **Word** → Extract body paragraphs  
-- **PDF** → Parse text layer; if scanned, call OCR to extract text  
-- **URL** → Extract main content and filter ads, navigation bars, etc.  
-
-All inputs are eventually unified into **structured plain text**, ready for model processing.  
-
----
-
-## 3. Model Processing Logic
-
-Adopts a “two-step” strategy:  
-
-1. **Key Point Extraction**  
-   - Use LLM to summarize the article, extract core information and logical framework  
-   - Ensure content fidelity, complete structure, and neutral stance  
-
-2. **Perspective Rewriting**  
-   - Combine extracted key points with user prompts  
-   - User prompts support:  
-     - **Style control** (academic / news reporting / humorous)  
-     - **Perspective control** (supporting a policy / consumer’s viewpoint, etc.)  
-   - Output a new article reflecting the chosen perspective  
-
----
-
-## 4. Output and Display
-
-### Display Options
-
-- Direct reading on the web page  
-- **Comparison view** between original and rewritten article (with similarity calculation)  
-
-### Export Formats
-
-- Word  
-- PDF  
-- Markdown / HTML  
-
----
-
-## 5. User Interface and Interaction
-
-- **Homepage functions**: paste text / upload file / enter URL  
-- **Prompt input**: freeform entry & preset templates (academic, news, humorous, etc.)  
-- **Rewrite intensity adjustment**: from light editing → full rewrite  
-- **User experience**: progress display after submission → result page → read / compare / download  
-
----
-
-## 6. Extended Features and Future Plans
-
-- **API interface**: support for external system integration  
-- **Logs & optimization**: keep processing logs (de-identified), useful for debugging and improvement  
-- **Risk alerts**: notify users of compliance when dealing with sensitive or controversial topics  
-- **Future plans**: expand into plugins (Word plugin, browser extension)  
-
----
-
-## License
-
-[MIT](LICENSE)

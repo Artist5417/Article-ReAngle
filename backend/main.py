@@ -8,13 +8,31 @@ import uvicorn
 import os
 import webbrowser
 import threading
+from dotenv import load_dotenv
+
+# 加载 .env 文件
+load_dotenv()
+
+# 临时解决方案：如果环境变量不存在，从 .env 文件手动加载
+if not os.getenv("OPENAI_API_KEY"):
+    try:
+        with open('.env', 'r', encoding='utf-8') as f:
+            for line in f:
+                if line.startswith('OPENAI_API_KEY='):
+                    api_key = line.split('=', 1)[1].strip()
+                    os.environ["OPENAI_API_KEY"] = api_key
+                    break
+    except FileNotFoundError:
+        pass
+
+
 import time
 from .extractors import (
     extract_text_from_url,
     extract_text_from_docx,
     extract_text_from_pdf,
 )
-from .llm_free import rewrite_text
+from .llm import rewrite_text
 
 app = FastAPI(title='Article ReAngle')
 
@@ -87,7 +105,15 @@ async def process(
         return JSONResponse({'error': 'Empty content after extraction'}, status_code=400)
 
     try:
-        rewritten = await rewrite_text(raw_text, prompt, api_key=api_key)
+        # 后端容错：防止空 API Key 覆盖环境变量
+        provided = (api_key or "").strip()  # 用户传入的
+        env_key = os.getenv("OPENAI_API_KEY", "").strip()  # 环境变量
+        final_api_key = provided or env_key  # 优先使用用户传入的，否则使用环境变量
+        
+        if not final_api_key:
+            return JSONResponse({'error': '未提供 OpenAI API Key (既没有界面输入，也没有环境变量 OPENAI_API_KEY)。'}, status_code=400)
+        
+        rewritten = await rewrite_text(raw_text, prompt, api_key=final_api_key)
 
         return {
             'original': raw_text,

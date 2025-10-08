@@ -92,10 +92,6 @@ function switchResultTab(tabName) {
     event.target.classList.add('active');
 }
 
-// 处理风格选择变化（已移除，现在使用统一的提示词输入）
-
-// 更新强度值显示（已移除）
-
 // 处理文章
 async function processArticle() {
     const processBtn = document.getElementById('processBtn');
@@ -122,25 +118,26 @@ async function processArticle() {
     resultSection.classList.add('hidden');
     
     try {
-        // 构建请求数据
+        // 构建FormData
         const formData = new FormData();
+        
+        console.log('输入数据类型:', inputData.type);
+        console.log('输入数据内容:', inputData.content);
         
         if (inputData.type === 'text') {
             formData.append('input_text', inputData.content);
-        } else if (inputData.type === 'url') {
-            formData.append('url', inputData.content);
+            console.log('添加文本数据到FormData');
         } else if (inputData.type === 'file') {
             formData.append('file', inputData.content);
+            console.log('添加文件数据到FormData');
+        } else if (inputData.type === 'url') {
+            formData.append('url', inputData.content);
+            console.log('添加URL数据到FormData:', inputData.content);
         }
         
-        if (promptInput) {
-            formData.append('prompt', promptInput);
-        }
-        
-        // 添加API Key
+        formData.append('prompt', promptInput);
         formData.append('api_key', apiKeyInput);
         
-        // 发送请求
         const response = await fetch('/process', {
             method: 'POST',
             body: formData
@@ -172,18 +169,24 @@ async function processArticle() {
 
 // 获取输入数据
 function getInputData() {
+    console.log('开始检查输入数据...');
+    
     // 检查文本输入
-    const textInput = document.getElementById('inputText');
-    if (textInput.value.trim()) {
+    const inputText = document.getElementById('inputText').value.trim();
+    console.log('文本输入:', inputText);
+    if (inputText) {
+        console.log('使用文本输入');
         return {
             type: 'text',
-            content: textInput.value.trim()
+            content: inputText
         };
     }
     
     // 检查文件输入
     const fileInput = document.getElementById('fileInput');
+    console.log('文件输入:', fileInput.files.length);
     if (fileInput.files.length > 0) {
+        console.log('使用文件输入');
         return {
             type: 'file',
             content: fileInput.files[0]
@@ -192,69 +195,41 @@ function getInputData() {
     
     // 检查URL输入
     const urlInput = document.getElementById('urlInput');
-    if (urlInput.value.trim()) {
+    const urlValue = urlInput.value.trim();
+    console.log('URL输入:', urlValue);
+    if (urlValue) {
+        console.log('使用URL输入');
         return {
             type: 'url',
-            content: urlInput.value.trim()
+            content: urlValue
         };
     }
     
+    console.log('没有找到任何输入');
     return null;
 }
 
-// 获取风格提示词（已移除，现在使用统一的提示词输入）
-
 // 显示结果
 function displayResults(result) {
-    // 显示结果区域
     const resultSection = document.getElementById('result-section');
-    resultSection.classList.remove('hidden');
+    const originalContent = document.getElementById('originalContent');
+    const rewrittenContent = document.getElementById('rewrittenContent');
+    const summaryContent = document.getElementById('summaryContent');
     
-    // 填充内容
-    document.getElementById('rewrittenContent').textContent = result.rewritten;
-    document.getElementById('rewrittenContentCompare').textContent = result.rewritten;
-    document.getElementById('originalContent').textContent = result.original;
-    document.getElementById('summaryContent').textContent = result.summary;
-    
-    // 计算并显示相似度
-    const similarity = calculateSimilarity(result.original, result.rewritten);
-    document.getElementById('similarityScore').textContent = Math.round(similarity * 100);
-    
-    // 滚动到结果区域
-    resultSection.scrollIntoView({ behavior: 'smooth' });
-}
-
-// 计算文本相似度（简单实现）
-function calculateSimilarity(text1, text2) {
-    // 简单的字符级相似度计算
-    const len1 = text1.length;
-    const len2 = text2.length;
-    const maxLen = Math.max(len1, len2);
-    
-    if (maxLen === 0) return 1;
-    
-    // 计算最长公共子序列
-    const lcs = longestCommonSubsequence(text1, text2);
-    return lcs / maxLen;
-}
-
-// 最长公共子序列
-function longestCommonSubsequence(text1, text2) {
-    const m = text1.length;
-    const n = text2.length;
-    const dp = Array(m + 1).fill().map(() => Array(n + 1).fill(0));
-    
-    for (let i = 1; i <= m; i++) {
-        for (let j = 1; j <= n; j++) {
-            if (text1[i - 1] === text2[j - 1]) {
-                dp[i][j] = dp[i - 1][j - 1] + 1;
-            } else {
-                dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-            }
-        }
+    if (originalContent) {
+        originalContent.textContent = result.original || '';
     }
     
-    return dp[m][n];
+    if (rewrittenContent) {
+        rewrittenContent.textContent = result.rewritten || '';
+    }
+    
+    if (summaryContent) {
+        summaryContent.textContent = result.summary || '';
+    }
+    
+    resultSection.classList.remove('hidden');
+    resultSection.scrollIntoView({ behavior: 'smooth' });
 }
 
 // 复制文本
@@ -273,28 +248,26 @@ function copyText(type) {
 }
 
 // 下载文本
-function downloadText(type, format) {
+function downloadText(type) {
     if (!currentResult) return;
     
     let content = '';
     let filename = '';
     
     if (type === 'rewritten') {
-        content = currentResult.rewritten;
-        filename = 'rewritten_article';
+        content = currentResult.rewritten || '';
+        filename = 'rewritten_article.txt';
+    } else if (type === 'original') {
+        content = currentResult.original || '';
+        filename = 'original_article.txt';
     }
     
-    let mimeType = 'text/plain';
-    let extension = 'txt';
-    
-    if (format === 'md') {
-        mimeType = 'text/markdown';
-        extension = 'md';
+    if (!content) {
+        alert('没有内容可下载');
+        return;
     }
     
-    filename += '.' + extension;
-    
-    const blob = new Blob([content], { type: mimeType });
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     
     const a = document.createElement('a');
@@ -305,4 +278,3 @@ function downloadText(type, format) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
-

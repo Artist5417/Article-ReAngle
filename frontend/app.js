@@ -298,7 +298,7 @@ function displayResults(result) {
     }
     
     if (rewrittenContentCompare) {
-        // 对比视图：直接显示新文章，带段落分割线
+        // 对比视图：左右两列分开渲染，右侧用与左侧相同的段落块结构，便于虚线对齐
         rewrittenContentCompare.innerHTML = renderRewrittenWithSeparators(currentOriginalText, currentRewrittenText);
     }
     
@@ -316,54 +316,146 @@ function displayResults(result) {
     resultSection.scrollIntoView({ behavior: 'smooth' });
 }
 
-// 分割文本为段落 - 基于内容分割
+// 智能段落分割 - 基于语义和内容结构
 function splitIntoParagraphs(text) {
     if (!text) return [];
     
-    // 先按双换行符分割
+    // 清理文本，移除多余的空白字符
+    text = text.replace(/\s+/g, ' ').trim();
+    
+    // 先按双换行符分割（保持原有段落结构）
     let paragraphs = text.split(/\n\s*\n/);
     
-    // 如果没有双换行符，尝试按句子分割
+    // 如果没有双换行符，进行智能分割
     if (paragraphs.length === 1) {
-        const sentences = text.split(/[。！？]/);
-        paragraphs = [];
-        let currentPara = '';
-        
-        for (const sentence of sentences) {
-            if (sentence.trim()) {
-                currentPara += sentence.trim() + '。';
-                // 每3-4个句子组成一个段落
-                if (currentPara.length > 100) {
-                    paragraphs.push(currentPara.trim());
-                    currentPara = '';
-                }
-            }
-        }
-        if (currentPara.trim()) {
-            paragraphs.push(currentPara.trim());
-        }
+        paragraphs = intelligentParagraphSplit(text);
     }
+    
+    // 进一步优化段落分割
+    paragraphs = optimizeParagraphSegmentation(paragraphs);
     
     return paragraphs.map(p => p.trim()).filter(p => p.length > 0);
 }
 
-// 渲染段落对比视图
+// 智能段落分割算法
+function intelligentParagraphSplit(text) {
+    const paragraphs = [];
+    const sentences = text.split(/([。！？；])/);
+    let currentPara = '';
+    let sentenceCount = 0;
+    
+    for (let i = 0; i < sentences.length; i += 2) {
+        const sentence = sentences[i];
+        const punctuation = sentences[i + 1] || '';
+        
+        if (sentence.trim()) {
+            currentPara += sentence.trim() + punctuation;
+            sentenceCount++;
+            
+            // 段落分割条件：
+            // 1. 句子数量达到3-5个
+            // 2. 段落长度超过150字符
+            // 3. 遇到明显的段落标记词
+            const shouldSplit = (
+                sentenceCount >= 3 && 
+                (currentPara.length > 150 || hasParagraphMarker(currentPara))
+            );
+            
+            if (shouldSplit) {
+                paragraphs.push(currentPara.trim());
+                currentPara = '';
+                sentenceCount = 0;
+            }
+        }
+    }
+    
+    // 添加最后一个段落
+    if (currentPara.trim()) {
+        paragraphs.push(currentPara.trim());
+    }
+    
+    return paragraphs;
+}
+
+// 检查是否包含段落标记词
+function hasParagraphMarker(text) {
+    const markers = [
+        '首先', '其次', '再次', '最后', '总之', '综上所述',
+        '另外', '此外', '同时', '然而', '但是', '不过',
+        '因此', '所以', '由此可见', '总的来说', '简而言之'
+    ];
+    
+    return markers.some(marker => text.includes(marker));
+}
+
+// 优化段落分割
+function optimizeParagraphSegmentation(paragraphs) {
+    const optimized = [];
+    
+    for (let i = 0; i < paragraphs.length; i++) {
+        const para = paragraphs[i];
+        
+        // 如果段落过长（超过500字符），尝试进一步分割
+        if (para.length > 500) {
+            const subParagraphs = splitLongParagraph(para);
+            optimized.push(...subParagraphs);
+        } else {
+            optimized.push(para);
+        }
+    }
+    
+    return optimized;
+}
+
+// 分割过长的段落
+function splitLongParagraph(text) {
+    const sentences = text.split(/([。！？；])/);
+    const subParagraphs = [];
+    let currentPara = '';
+    let sentenceCount = 0;
+    
+    for (let i = 0; i < sentences.length; i += 2) {
+        const sentence = sentences[i];
+        const punctuation = sentences[i + 1] || '';
+        
+        if (sentence.trim()) {
+            currentPara += sentence.trim() + punctuation;
+            sentenceCount++;
+            
+            // 每2-3个句子分割一次
+            if (sentenceCount >= 2 && currentPara.length > 200) {
+                subParagraphs.push(currentPara.trim());
+                currentPara = '';
+                sentenceCount = 0;
+            }
+        }
+    }
+    
+    if (currentPara.trim()) {
+        subParagraphs.push(currentPara.trim());
+    }
+    
+    return subParagraphs;
+}
+
+// 渲染段落对比视图 - 改进的段落对齐算法
 function renderAlignedParagraphs(originalText, rewrittenText) {
     const originalParagraphs = splitIntoParagraphs(originalText);
     const rewrittenParagraphs = splitIntoParagraphs(rewrittenText);
     
+    // 智能段落对齐
+    const alignedPairs = alignParagraphs(originalParagraphs, rewrittenParagraphs);
+    
     let html = '<div class="paragraph-comparison">';
     
-    // 计算最大段落数
-    const maxParagraphs = Math.max(originalParagraphs.length, rewrittenParagraphs.length);
-    
-    for (let i = 0; i < maxParagraphs; i++) {
-        const originalPara = originalParagraphs[i] || '';
-        const rewrittenPara = rewrittenParagraphs[i] || '';
+    for (let i = 0; i < alignedPairs.length; i++) {
+        const pair = alignedPairs[i];
+        const originalPara = pair.original || '';
+        const rewrittenPara = pair.rewritten || '';
         
         // 计算段落高度，用于动态调整分割线
-        const originalHeight = originalPara.split('\n').length;
-        const rewrittenHeight = rewrittenPara.split('\n').length;
+        const originalHeight = calculateParagraphHeight(originalPara);
+        const rewrittenHeight = calculateParagraphHeight(rewrittenPara);
         const maxHeight = Math.max(originalHeight, rewrittenHeight);
         
         html += `<div class="paragraph-pair" data-paragraph-number="${i + 1}" data-max-height="${maxHeight}">`;
@@ -387,6 +479,44 @@ function renderAlignedParagraphs(originalText, rewrittenText) {
     
     html += '</div>';
     return html;
+}
+
+// 智能段落对齐算法
+function alignParagraphs(originalParagraphs, rewrittenParagraphs) {
+    const alignedPairs = [];
+    const maxParagraphs = Math.max(originalParagraphs.length, rewrittenParagraphs.length);
+    
+    for (let i = 0; i < maxParagraphs; i++) {
+        const originalPara = originalParagraphs[i] || '';
+        const rewrittenPara = rewrittenParagraphs[i] || '';
+        
+        // 如果右侧缺段，创建空白占位符
+        const alignedPair = {
+            original: originalPara,
+            rewritten: rewrittenPara || createEmptyParagraphPlaceholder()
+        };
+        
+        alignedPairs.push(alignedPair);
+    }
+    
+    return alignedPairs;
+}
+
+// 创建空白段落占位符
+function createEmptyParagraphPlaceholder() {
+    return ''; // 返回空字符串，由CSS样式处理显示
+}
+
+// 计算段落高度
+function calculateParagraphHeight(text) {
+    if (!text) return 1;
+    
+    // 基于文本长度和换行符数量估算高度
+    const lineCount = text.split('\n').length;
+    const charCount = text.length;
+    const estimatedLines = Math.max(lineCount, Math.ceil(charCount / 50));
+    
+    return Math.max(1, estimatedLines);
 }
 
 // 高亮段落内的变化
@@ -588,10 +718,11 @@ function adjustSeparatorAlignment() {
 function renderOriginalWithSeparators(originalText) {
     const paragraphs = splitIntoParagraphs(originalText);
     let html = '<div class="paragraphs-with-separators">';
+    const total = paragraphs.length;
     
     for (let i = 0; i < paragraphs.length; i++) {
         const para = paragraphs[i];
-        html += `<div class="paragraph-block" data-paragraph-index="${i}">`;
+        html += `<div class=\"paragraph-block\" data-paragraph-index=\"${i}\" data-paragraph-number=\"${i + 1}\" data-total=\"${total}\" data-side=\"left\">`;
         html += `<div class="paragraph-content">${escapeHtml(para)}</div>`;
         if (i < paragraphs.length - 1) {
             html += '<div class="paragraph-separator"></div>';
@@ -611,12 +742,13 @@ function renderRewrittenWithSeparators(originalText, rewrittenText) {
     
     // 确保段落数量一致，以原文段落数量为准
     const maxParagraphs = Math.max(originalParagraphs.length, rewrittenParagraphs.length);
+    const total = maxParagraphs;
     
     for (let i = 0; i < maxParagraphs; i++) {
         const originalPara = originalParagraphs[i] || '';
         const rewrittenPara = rewrittenParagraphs[i] || '';
         
-        html += `<div class="paragraph-block" data-paragraph-index="${i}">`;
+        html += `<div class=\"paragraph-block\" data-paragraph-index=\"${i}\" data-paragraph-number=\"${i + 1}\" data-total=\"${total}\" data-side=\"right\">`;
         if (rewrittenPara) {
             html += `<div class="paragraph-content">${highlightParagraphChanges(originalPara, rewrittenPara)}</div>`;
         } else {

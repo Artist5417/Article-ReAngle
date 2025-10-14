@@ -248,6 +248,7 @@ input[type="range"] {
     background: #e2e8f0;
     outline: none;
     -webkit-appearance: none;
+    appearance: none;
 }
 
 input[type="range"]::-webkit-slider-thumb {
@@ -375,7 +376,7 @@ input[type="range"]::-moz-range-thumb {
     line-height: 1.6;
 }
 
-/* 对比视图 */
+/* 对比视图 - 左右两列布局 */
 .compare-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -387,6 +388,7 @@ input[type="range"]::-moz-range-thumb {
     margin-bottom: 10px;
     color: #4a5568;
     font-size: 1.1rem;
+    text-align: left;
 }
 
 .similarity-info {
@@ -584,22 +586,26 @@ input[type="range"]::-moz-range-thumb {
     border: 1px solid #a3d9a3 !important;
 }
 
-/* 段落对比视图样式 */
+/* 段落对比视图样式 - 改进的布局 */
 .paragraph-comparison {
     display: flex;
     flex-direction: column;
     gap: 0;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .paragraph-pair {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    align-items: flex-start;
-    padding: 20px 0;
+    gap: 0;
+    align-items: stretch;
     position: relative;
+    min-height: 80px;
 }
 
+/* 段落分隔线 - 浅灰色虚线 */
 .paragraph-pair:not(:last-child)::after {
     content: '';
     position: absolute;
@@ -609,28 +615,29 @@ input[type="range"]::-moz-range-thumb {
     height: 1px;
     background: repeating-linear-gradient(
         to right,
-        #cbd5e0 0px,
-        #cbd5e0 8px,
+        #ccc 0px,
+        #ccc 8px,
         transparent 8px,
         transparent 16px
     );
-    margin: 0 20px;
+    border-bottom: 1px dashed #ccc;
 }
 
 .paragraph-original,
 .paragraph-rewritten {
     display: flex;
     flex-direction: column;
-    min-height: 60px;
+    min-height: 80px;
+    position: relative;
 }
 
 .paragraph-original {
-    border-right: 2px solid #e2e8f0;
-    padding-right: 15px;
+    border-right: 1px solid #e2e8f0;
+    background: #fafbfc;
 }
 
 .paragraph-rewritten {
-    padding-left: 15px;
+    background: white;
 }
 
 .paragraph-content {
@@ -638,53 +645,65 @@ input[type="range"]::-moz-range-thumb {
     line-height: 1.6;
     font-size: 14px;
     color: #4a5568;
-    background: white;
-    padding: 15px;
-    border-radius: 6px;
-    border: 1px solid #e2e8f0;
-    min-height: 40px;
+    padding: 20px;
+    min-height: 60px;
     position: relative;
+    flex: 1;
 }
 
 .paragraph-original .paragraph-content {
-    background: #f7fafc;
-    border-color: #cbd5e0;
+    background: transparent;
+    border: none;
 }
 
 .paragraph-rewritten .paragraph-content {
-    background: white;
-    border-color: #e2e8f0;
+    background: transparent;
+    border: none;
 }
 
 .empty-paragraph {
-    background: #f1f5f9 !important;
-    border-style: dashed !important;
-    color: #94a3b8 !important;
+    background: #f8f9fa !important;
+    border: 1px dashed #dee2e6 !important;
+    color: #6c757d !important;
     font-style: italic;
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 60px;
+    text-align: center;
 }
 
 .empty-paragraph::before {
     content: "此段落在改写版本中不存在";
     font-size: 12px;
+    color: #6c757d;
 }
 
-/* 段落编号 */
-.paragraph-pair::before {
-    content: "段落 " attr(data-paragraph-number);
+/* 段落编号 - 每侧单独徽标 */
+.paragraph-block::before {
+    content: attr(data-paragraph-number) "/" attr(data-total);
     position: absolute;
     top: 0;
     left: 0;
-    font-size: 11px;
-    color: #a0aec0;
-    font-weight: 500;
-    background: #f7fafc;
-    padding: 2px 8px;
-    border-radius: 3px;
-    border: 1px solid #e2e8f0;
+    transform: translate(-6px, -70%);
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 700;
+    background: #edf2f7;
+    padding: 2px 6px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e0;
+    line-height: 1;
+    z-index: 2;
+}
+
+/* 左右两侧视觉区分 */
+.paragraph-block[data-side="left"]::before {
+    background: #e2e8f0;
+}
+.paragraph-block[data-side="right"]::before {
+    background: #d1fae5;
+    border-color: #a7f3d0;
 }
 
 /* 段落分割线样式 - 无方框版本 */
@@ -695,6 +714,7 @@ input[type="range"]::-moz-range-thumb {
 
 .paragraph-block {
     margin-bottom: 0;
+    position: relative;
 }
 
 .paragraph-block:last-child {
@@ -726,27 +746,45 @@ input[type="range"]::-moz-range-thumb {
     width: 100%;
 }
 
-/* 响应式设计 */
+/* 响应式设计 - 改进的移动端布局 */
 @media (max-width: 768px) {
-    .side-by-side-comparison {
-        grid-template-columns: 1fr;
-        gap: 15px;
+    .compare-content {
+        flex-direction: column;
+    }
+    
+    .compare-column h3 {
+        border-right: none;
+        border-left: none;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .compare-column:last-child h3 {
+        border-left: none;
+        border-top: 1px solid #e2e8f0;
     }
     
     .paragraph-pair {
         grid-template-columns: 1fr;
-        gap: 15px;
+        gap: 0;
     }
     
     .paragraph-original {
         border-right: none;
-        border-bottom: 2px solid #e2e8f0;
-        padding-right: 0;
-        padding-bottom: 15px;
+        border-bottom: 1px solid #e2e8f0;
+        background: #f8f9fa;
     }
     
     .paragraph-rewritten {
-        padding-left: 0;
-        padding-top: 15px;
+        background: white;
+    }
+    
+    .paragraph-content {
+        padding: 15px;
+    }
+    
+    .paragraph-pair::before {
+        top: 5px;
+        left: 5px;
+        font-size: 9px;
     }
 }

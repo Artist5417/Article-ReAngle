@@ -1,7 +1,7 @@
 services:
   - type: web
     name: article-reangle
-    env: python
+    runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT
@@ -9,4 +9,6 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.13.4
+      - key: OPENAI_API_KEY
+        sync: false
 

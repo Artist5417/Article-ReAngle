@@ -59,7 +59,17 @@
                             <div class="control-row">
                                 <div class="control-group half-width">
                                     <label for="promptInput">请输入改写要求：</label>
-                                    <textarea id="promptInput" placeholder="例如：学术化表达、轻松幽默语气、支持环保政策、批判技术垄断"></textarea>
+                                    <div class="prompt-wrapper" id="promptWrapper">
+                                        <textarea id="promptInput" placeholder="例如：学术化表达、轻松幽默语气、支持环保政策、批判技术垄断"></textarea>
+                                        <button type="button" class="prompt-dropdown-btn" onclick="togglePromptDropdown()" aria-label="选择预设风格">▾</button>
+                                        <div id="presetDropdown" class="preset-dropdown hidden" role="listbox" aria-label="预设风格列表">
+                                            <button type="button" class="preset-item" onclick="applyPreset('轻松幽默的口语风')">轻松幽默的口语风</button>
+                                            <button type="button" class="preset-item" onclick="applyPreset('逻辑严谨的学术风')">逻辑严谨的学术风</button>
+                                            <button type="button" class="preset-item" onclick="applyPreset('中立客观的新闻风')">中立客观的新闻风</button>
+                                            <button type="button" class="preset-item" onclick="applyPreset('节奏鲜明的公众号风')">节奏鲜明的公众号风</button>
+                                            <button type="button" class="preset-item" onclick="applyPreset('文艺抒情的诗意风')">文艺抒情的诗意风</button>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="control-group half-width">
                                     <label for="apiKeyInput">API Key（可选）：</label>

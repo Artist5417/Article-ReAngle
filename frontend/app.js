@@ -54,6 +54,56 @@ function initializeApp() {
     console.log('初始化完成');
 }
 
+// 预设风格选择器：展开/收起
+function togglePresetList() {
+    const list = document.getElementById('presetList');
+    if (!list) return;
+    list.classList.toggle('hidden');
+}
+
+// 打开下拉：在输入框聚焦时
+// 箭头按钮点击：展开/收起
+function togglePromptDropdown() {
+    const dd = document.getElementById('presetDropdown');
+    if (!dd) return;
+    dd.classList.toggle('hidden');
+}
+
+// 应用预设到 promptInput
+function applyPreset(text) {
+    const promptInput = document.getElementById('promptInput');
+    if (!promptInput) return;
+    // 若已有内容，智能拼接；否则直接填充
+    const existing = promptInput.value.trim();
+    if (existing) {
+        // 若已包含该风格，直接收起列表
+        if (existing.includes(text)) {
+            togglePresetList();
+            return;
+        }
+        // 追加一个分隔符与风格关键词
+        promptInput.value = existing + (existing.endsWith('；') || existing.endsWith(';') ? ' ' : '； ') + text;
+    } else {
+        promptInput.value = text;
+    }
+    // 移动光标到末尾并聚焦
+    promptInput.focus();
+    promptInput.selectionStart = promptInput.selectionEnd = promptInput.value.length;
+    // 选择后自动收起
+    const dd = document.getElementById('presetDropdown');
+    if (dd && !dd.classList.contains('hidden')) dd.classList.add('hidden');
+}
+
+// 点击外部区域时收起下拉
+document.addEventListener('click', function(e) {
+    const wrapper = document.getElementById('promptWrapper');
+    const dropdown = document.getElementById('presetDropdown');
+    if (!wrapper || !dropdown) return;
+    if (!wrapper.contains(e.target)) {
+        dropdown.classList.add('hidden');
+    }
+});
+
 // 切换输入标签页
 function switchTab(tabName) {
     // 隐藏所有面板

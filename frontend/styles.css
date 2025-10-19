@@ -214,6 +214,99 @@ h2 {
     font-family: inherit;
 }
 
+/* 文本域 + 下拉按钮 容器 */
+.prompt-wrapper {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+
+.prompt-dropdown-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 24px;
+    width: 24px;
+    border: none;
+    border-radius: 4px;
+    background: #e6f0ff; /* 浅蓝背景 */
+    color: #1e40af; /* 深蓝箭头 */
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 24px;
+    appearance: none;
+    -webkit-appearance: none;
+    box-shadow: none;
+    outline: none;
+    z-index: 2;
+}
+
+.prompt-dropdown-btn:hover {
+    background: #d6e4ff; /* hover 更明显 */
+    color: #1e3a8a;
+}
+
+/* 悬浮下拉列表（绝对定位，不占额外布局空间） */
+.preset-dropdown {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 20;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    padding: 8px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    max-height: 192px; /* 约4项高度 */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+/* 给 prompt 文本域右侧留出空间给下拉箭头 */
+.prompt-wrapper textarea#promptInput {
+    width: 100%;
+    padding-right: 44px; /* 为内置箭头预留空间，保持原宽度视觉 */
+}
+
+/* 自定义滚动条（WebKit） */
+.preset-dropdown::-webkit-scrollbar {
+    width: 8px;
+}
+.preset-dropdown::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 8px;
+}
+.preset-dropdown::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 8px;
+}
+.preset-dropdown::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* 预设风格选择器 */
+
+.preset-item {
+    text-align: left;
+    padding: 8px 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #2d3748;
+}
+
+.preset-item:hover {
+    background: #edf2f7;
+    border-color: #cbd5e0;
+}
+
 .control-row {
     display: flex;
     gap: 20px;

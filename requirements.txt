@@ -1,2 +1,18 @@
- -r backend/requirements.txt
-
+fastapi[standard]==0.115.2
+uvicorn[standard]==0.30.6
+python-multipart==0.0.9
+pydantic==2.9.2
+httpx==0.27.2
+requests==2.32.3
+beautifulsoup4==4.12.3
+readability-lxml==0.8.1
+lxml[html_clean]==5.3.0
+python-docx==1.1.2
+pypdf==4.3.1
+pytesseract==0.3.13
+Pillow==10.4.0
+rapidfuzz==3.9.6
+markdown==3.7
+jinja2==3.1.4
+openai==2.3.0
+google-genai==1.44.0

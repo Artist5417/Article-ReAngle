@@ -3,8 +3,6 @@ OpenAI LLM服务
 使用OpenAI API
 """
 
-import httpx
-import json
 import os
 import requests
 from typing import Optional
@@ -12,25 +10,30 @@ from typing import Optional
 # OpenAI配置
 OPENAI_BASE_URL = "https://api.openai.com/v1"
 
-async def call_openai(messages: list, model: str = "gpt-4o-mini", api_key: str | None = None) -> str:
+
+async def call_openai(
+    messages: list, model: str = "gpt-4o-mini", api_key: str | None = None
+) -> str:
     """使用OpenAI API"""
     # 兼容：优先使用传入的 api_key；若为空，则回退到环境变量
     key_from_env = os.getenv("OPENAI_API_KEY", "").strip()
     key_to_use = (api_key or "").strip() or key_from_env
     if not key_to_use:
         return "错误：未提供 OpenAI API Key（既没有界面输入，也没有环境变量 OPENAI_API_KEY）。"
-    
+
     try:
         # 使用requests库作为备用方案
         headers = {
             "Authorization": f"Bearer {key_to_use}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
-        
+
         # 智能token计算（采用api/index.py的逻辑）
-        user_message = next((msg["content"] for msg in messages if msg["role"] == "user"), "")
+        user_message = next(
+            (msg["content"] for msg in messages if msg["role"] == "user"), ""
+        )
         text_length = len(user_message)
-        
+
         # 目标生成长度：原文约110%，以保证不变短；保底1000
         target_tokens = max(1000, int(text_length * 1.1))
         # 经验上限：gpt-4o-mini 总窗口约 20000，生成上限≈16000
@@ -42,21 +45,22 @@ async def call_openai(messages: list, model: str = "gpt-4o-mini", api_key: str |
 
         # 可用生成空间 = 总窗口 - 输入 - 安全余量
         safety_margin = 500
-        available_tokens = max(0, model_total_window - approx_input_tokens - safety_margin)
+        available_tokens = max(
+            0, model_total_window - approx_input_tokens - safety_margin
+        )
 
         # 生成上限受三个因素共同约束：目标、模型生成上限、可用空间
         max_tokens = max(
-            256,
-            min(target_tokens, model_completion_cap, available_tokens)
+            256, min(target_tokens, model_completion_cap, available_tokens)
         )
-        
+
         request_data = {
             "model": model,
             "messages": messages,
             "max_tokens": max_tokens,
-            "temperature": 0.7
+            "temperature": 0.7,
         }
-        
+
         # 超限前置校验：若无可用生成空间则直接报错
         if available_tokens < 256:
             return (
@@ -64,38 +68,42 @@ async def call_openai(messages: list, model: str = "gpt-4o-mini", api_key: str |
                 f"模型总窗口 {model_total_window}，安全余量 {safety_margin}，可用生成空间 {available_tokens}。"
                 f"请缩短输入或改用分段重写。"
             )
-        
+
         # 使用requests库发送请求
         response = requests.post(
             f"{OPENAI_BASE_URL}/chat/completions",
             headers=headers,
             json=request_data,
-            timeout=60
+            timeout=60,
         )
-        
+
         if response.status_code == 200:
             result = response.json()
-            return result['choices'][0]['message']['content']
+            return result["choices"][0]["message"]["content"]
         else:
             # 返回更清晰的硬上限提示
-            err_text = response.text or ''
-            if 'max_tokens' in err_text or 'maximum' in err_text:
+            err_text = response.text or ""
+            if "max_tokens" in err_text or "maximum" in err_text:
                 return (
-                    "OpenAI API错误: 请求超出模型限制。" 
+                    "OpenAI API错误: 请求超出模型限制。"
                     f"输入估算 {approx_input_tokens} tokens，max_tokens 请求 {max_tokens}，"
                     f"模型生成上限约 {model_completion_cap}，总窗口 {model_total_window}，"
                     f"可用生成空间 {available_tokens}。请缩短输入或采用分段重写。\n原始错误：{err_text}"
                 )
             return f"OpenAI API错误: {response.status_code} - {response.text}"
-                
+
     except Exception as e:
         print(f"❌ 详细错误信息: {str(e)}")
         print(f"错误类型: {type(e)}")
         return f"OpenAI连接错误: {str(e)}"
 
-async def call_free_llm(messages: list, model: str = "gpt-4o-mini", api_key: str = None) -> str:
+
+async def call_free_llm(
+    messages: list, model: str = "gpt-4o-mini", api_key: str = None
+) -> str:
     """调用OpenAI API"""
     return await call_openai(messages, model, api_key)
+
 
 async def rewrite_text(text: str, user_requirement: str, api_key: str = None) -> str:
     """根据用户要求改写文本"""
@@ -124,12 +132,15 @@ async def rewrite_text(text: str, user_requirement: str, api_key: str = None) ->
     user_prompt_template = (
         "【用户需求】\n{req}\n\n"
         "【原文】\n{src}\n\n"
-        "【任务】\n请严格遵循以上规则，根据\"用户需求\"重写\"原文\"，输出完整正文。"
+        '【任务】\n请严格遵循以上规则，根据"用户需求"重写"原文"，输出完整正文。'
     )
 
     messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_prompt_template.format(req=user_requirement, src=text)}
+        {
+            "role": "user",
+            "content": user_prompt_template.format(req=user_requirement, src=text),
+        },
     ]
-    
+
     return await call_free_llm(messages, api_key=api_key)

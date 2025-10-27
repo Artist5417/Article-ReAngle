@@ -1,3 +1,7 @@
+"""
+Utility functions for text processing
+"""
+
 from rapidfuzz import fuzz
 import re
 

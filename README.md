@@ -54,7 +54,7 @@
 pip install -r requirements.txt
 ```
 
-1. **设置环境变量**：
+2. **设置环境变量**：
 
 ```bash
 # Windows PowerShell
@@ -67,31 +67,54 @@ set OPENAI_API_KEY=your-api-key-here
 export OPENAI_API_KEY="your-api-key-here"
 ```
 
-1. **启动应用**：
+3. **启动应用**：
 
 ```bash
-python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-1. **访问应用**：
+或者直接运行：
+
+```bash
+python -m app.main
+```
+
+4. **访问应用**：
 打开浏览器访问 <http://localhost:8000>
 
 ## 📁 项目结构
 
+Following FastAPI best practices with modular architecture:
+
 ```text
 Article-ReAngle/
-├── backend/               # 后端服务
-│   ├── main.py            # FastAPI 主应用入口，处理所有 HTTP 请求
-│   ├── llm.py             # AI 文本重写服务，调用 OpenAI API
-│   ├── extractors.py      # 内容提取器，处理 URL/文件/PDF 文本提取
-│   └── utils.py           # 工具函数，文本相似度计算和格式化
-├── frontend/              # 前端界面
-│   ├── index.html         # 主页面，左右分栏布局
-│   ├── app.js             # 前端逻辑，处理用户交互和 API 调用
-│   └── styles.css         # 样式文件，现代化渐变背景和响应式设计
-├── requirements.txt       # 项目依赖
-├── render.yaml            # Render 部署配置
-└── README.md              # 项目文档
+├── app/                      # Main application package
+│   ├── __init__.py           # Package initialization
+│   ├── main.py               # FastAPI application entry point
+│   ├── config.py             # Configuration and constants
+│   ├── dependencies.py       # Shared dependencies and utilities
+│   ├── routers/              # API route modules
+│   │   ├── __init__.py
+│   │   ├── articles.py       # Article rewriting endpoints
+│   │   ├── stories.py        # Story generation endpoints
+│   │   └── results.py        # Results retrieval endpoints
+│   ├── services/             # Business logic layer
+│   │   ├── __init__.py
+│   │   ├── extractors.py     # Content extraction (URL, PDF, DOCX)
+│   │   ├── llm.py            # LLM services (OpenAI integration)
+│   │   └── utils.py          # Utility functions
+│   ├── models/               # LLM client models (under development)
+│   │   ├── gemini_client.py
+│   │   ├── openai_client.py
+│   │   └── prompts/
+│   └── static/               # Frontend files
+│       ├── index.html        # Main page
+│       ├── app.js            # Frontend logic
+│       └── styles.css        # Styles
+├── results/                  # Generated content storage
+├── requirements.txt          # Project dependencies
+├── render.yaml               # Render deployment config
+└── README.md                 # Project documentation
 ```
 
 ## 🔄 程序运行流程
@@ -99,30 +122,51 @@ Article-ReAngle/
 ### 应用启动流程
 
 ```text
-用户启动命令 → backend/main.py (FastAPI 应用) → 加载环境变量 → 配置中间件 → 启动 Uvicorn 服务器 → 监听端口
+用户启动命令 → app/main.py (FastAPI 应用) → 加载环境变量 → 配置中间件 → 
+注册路由 (articles, stories, results) → 启动 Uvicorn 服务器 → 监听端口
 ```
 
 ### 用户请求处理流程
 
 ```text
-用户访问 → backend/main.py @app.get('/') → 返回 frontend/index.html → 加载前端资源 → 用户界面准备就绪
+用户访问 → app/main.py @app.get('/') → 返回 app/static/index.html → 
+加载前端资源 → 用户界面准备就绪
 ```
 
-### 洗稿处理流程
+### 文章改写流程
 
 ```text
-用户输入 → frontend/app.js → POST 请求到 /process → backend/main.py @app.post('/process') → 
-根据输入类型调用 extractors.py → backend/llm.py rewrite_text() → 调用 OpenAI API → 
-返回改写结果 → frontend/app.js displayResults() → 展示结果给用户
+用户输入 → app/static/app.js → POST /process → app/routers/articles.py → 
+调用 app/services/extractors.py 提取内容 → 
+调用 app/services/llm.py rewrite_text() → OpenAI API → 
+返回改写结果 → 前端展示
 ```
 
-### 文件间依赖关系
+### 故事生成流程
 
 ```text
-backend/main.py (主入口)
-├── 导入 backend/extractors.py (内容提取)
-├── 导入 backend/llm.py (AI 重写)
-└── 服务 frontend/ 静态文件 (用户界面)
+用户请求 → POST /generate → app/routers/stories.py → 
+解析参数 (app/dependencies.py) → 
+生成故事 (app/services/llm.py) → 
+存储结果 → 返回 JSON 响应
+```
+
+### 模块架构
+
+```text
+app/main.py (FastAPI 应用)
+├── 路由层 (routers/)
+│   ├── articles.py → 文章改写 API
+│   ├── stories.py  → 故事生成 API
+│   └── results.py  → 结果查询 API
+├── 服务层 (services/)
+│   ├── extractors.py → 内容提取服务
+│   ├── llm.py        → LLM 调用服务
+│   └── utils.py      → 工具函数
+├── 配置层
+│   ├── config.py       → 应用配置
+│   └── dependencies.py → 共享依赖
+└── 静态资源 (static/) → 前端界面
 ```
 
 ## 🛠️ 技术栈

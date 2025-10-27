@@ -1,3 +1,7 @@
+"""
+Text extraction services for various input sources
+"""
+
 import httpx
 import docx
 import pypdf

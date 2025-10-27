@@ -1,18 +1,17 @@
 """
-OpenAI LLM服务
-使用OpenAI API
+LLM services for text rewriting and generation
+Uses OpenAI API
 """
 
 import os
 import requests
 from typing import Optional
 
-# OpenAI配置
-OPENAI_BASE_URL = "https://api.openai.com/v1"
+from app.configs.settings import OPENAI_BASE_URL, DEFAULT_MODEL
 
 
 async def call_openai(
-    messages: list, model: str = "gpt-4o-mini", api_key: str | None = None
+    messages: list, model: str = DEFAULT_MODEL, api_key: str | None = None
 ) -> str:
     """使用OpenAI API"""
     # 兼容：优先使用传入的 api_key；若为空，则回退到环境变量
@@ -99,7 +98,7 @@ async def call_openai(
 
 
 async def call_free_llm(
-    messages: list, model: str = "gpt-4o-mini", api_key: str = None
+    messages: list, model: str = DEFAULT_MODEL, api_key: str = None
 ) -> str:
     """调用OpenAI API"""
     return await call_openai(messages, model, api_key)
@@ -109,7 +108,7 @@ async def rewrite_text(text: str, user_requirement: str, api_key: str = None) ->
     """根据用户要求改写文本"""
     # 统一"忠实改写器"提示词
     system_prompt = (
-        "你是一名“忠实改写器”。\n"
+        '你是一名"忠实改写器"。\n'
         "你的任务是根据用户提供的【观点/立场】与【表达风格】，对原文进行风格化重写。\n"
         "避免逐句同义替换；仅在有助于可读性或风格匹配时，可适度调整句式、语序或段落结构。\n\n"
         "改写原则：\n\n"

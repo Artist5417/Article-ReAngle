@@ -70,7 +70,7 @@ export OPENAI_API_KEY="your-api-key-here"
 3. **启动应用**：
 
 ```bash
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
 或者直接运行：
@@ -173,7 +173,7 @@ app/main.py (FastAPI 应用)
 
 - **后端**: FastAPI, Uvicorn, OpenAI API, httpx, BeautifulSoup4, python-docx, pypdf
 - **前端**: 原生 HTML/CSS/JavaScript, 响应式设计
-- **部署**: Render (主要), Vercel (备用)
+- **部署**: Render
 
 ## ❓ 常见问题
 

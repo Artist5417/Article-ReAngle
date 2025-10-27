@@ -11,8 +11,8 @@ from typing import Optional
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
-from app.config import RESULTS_DIR
-from app.services.llm import call_openai
+from app.configs.settings import RESULTS_DIR
+from app.services.llms.llm import call_openai
 
 router = APIRouter(
     prefix="/generate",

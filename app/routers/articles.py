@@ -1,6 +1,5 @@
 """
 Article rewriting endpoints
-Handles form-based article rewriting from various sources
 """
 
 import os
@@ -14,7 +13,7 @@ from app.services.extractors import (
     extract_text_from_docx,
     extract_text_from_pdf,
 )
-from app.services.llm import rewrite_text
+from app.services.llms.llm import rewrite_text
 
 router = APIRouter(
     prefix="",

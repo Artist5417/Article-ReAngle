@@ -5,7 +5,7 @@ Configuration and constants for Article ReAngle
 import os
 
 # Base directory - app folder location
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Static files directory (frontend)
 STATIC_DIR = os.path.join(BASE_DIR, "static")

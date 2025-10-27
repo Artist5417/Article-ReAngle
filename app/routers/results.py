@@ -9,7 +9,7 @@ import json
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from app.config import RESULTS_DIR
+from app.configs.settings import RESULTS_DIR
 
 router = APIRouter(
     prefix="/results",

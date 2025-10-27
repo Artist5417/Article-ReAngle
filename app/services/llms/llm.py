@@ -7,7 +7,7 @@ import os
 import requests
 from typing import Optional
 
-from app.config import OPENAI_BASE_URL, DEFAULT_MODEL
+from app.configs.settings import OPENAI_BASE_URL, DEFAULT_MODEL
 
 
 async def call_openai(

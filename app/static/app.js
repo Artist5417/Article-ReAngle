@@ -148,7 +148,7 @@ async function processArticle() {
     const loading = document.getElementById('loading');
     const resultSection = document.getElementById('result-section');
     
-    // 获取输入数据
+    // 获取输入数据（仅基于当前激活的输入页签）
     const inputData = getInputData();
     if (!inputData) {
         alert('请提供要处理的文章内容！');
@@ -187,6 +187,9 @@ async function processArticle() {
             console.log('添加URL数据到FormData:', inputData.content);
         }
         
+        // 明确告知后端输入来源类型
+        formData.append('input_type', inputData.type);
+
         formData.append('prompt', promptInput);
         formData.append('api_key', apiKeyInput);
         
@@ -219,45 +222,46 @@ async function processArticle() {
     }
 }
 
-// 获取输入数据
+// 获取输入数据（仅按当前激活的输入页签判断）
 function getInputData() {
-    console.log('开始检查输入数据...');
-    
-    // 检查文本输入
-    const inputText = document.getElementById('inputText').value.trim();
-    console.log('文本输入:', inputText);
-    if (inputText) {
-        console.log('使用文本输入');
-        return {
-            type: 'text',
-            content: inputText
-        };
+    console.log('开始检查输入数据（基于当前激活页签）...');
+
+    // 找到当前激活的输入面板
+    const activePanel = document.querySelector('.input-panel.active');
+    if (!activePanel) {
+        console.log('未找到激活的输入面板');
+        return null;
     }
-    
-    // 检查文件输入
-    const fileInput = document.getElementById('fileInput');
-    console.log('文件输入:', fileInput.files.length);
-    if (fileInput.files.length > 0) {
-        console.log('使用文件输入');
-        return {
-            type: 'file',
-            content: fileInput.files[0]
-        };
+
+    // 通过面板 id 判断类型：text-input / file-input / url-input
+    const panelId = activePanel.id || '';
+    let inputType = '';
+    if (panelId.startsWith('text-')) inputType = 'text';
+    else if (panelId.startsWith('file-')) inputType = 'file';
+    else if (panelId.startsWith('url-')) inputType = 'url';
+
+    // 根据当前类型仅读取对应控件
+    if (inputType === 'text') {
+        const inputTextEl = document.getElementById('inputText');
+        const value = (inputTextEl?.value || '').trim();
+        if (!value) return null;
+        return { type: 'text', content: value };
     }
-    
-    // 检查URL输入
-    const urlInput = document.getElementById('urlInput');
-    const urlValue = urlInput.value.trim();
-    console.log('URL输入:', urlValue);
-    if (urlValue) {
-        console.log('使用URL输入');
-        return {
-            type: 'url',
-            content: urlValue
-        };
+
+    if (inputType === 'file') {
+        const fileInput = document.getElementById('fileInput');
+        if (!fileInput || fileInput.files.length === 0) return null;
+        return { type: 'file', content: fileInput.files[0] };
     }
-    
-    console.log('没有找到任何输入');
+
+    if (inputType === 'url') {
+        const urlInput = document.getElementById('urlInput');
+        const value = (urlInput?.value || '').trim();
+        if (!value) return null;
+        return { type: 'url', content: value };
+    }
+
+    console.log('无法识别的输入类型，或当前面板无内容');
     return null;
 }
 

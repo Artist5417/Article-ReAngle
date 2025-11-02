@@ -29,6 +29,7 @@ async def process_article(
     prompt: Optional[str] = Form("改写成新闻报道风格"),
     api_key: Optional[str] = Form(None),
     file: Optional[UploadFile] = File(None),
+    input_type: Optional[str] = Form(None),
 ):
     """
     Process and rewrite articles from multiple sources:
@@ -39,24 +40,47 @@ async def process_article(
     Supports multipart/form-data for legacy frontend compatibility
     """
 
-    # Check if at least one input source is provided
-    if not any([input_text, url, file]):
-        return JSONResponse({"error": "No input provided"}, status_code=400)
-
+    # Determine input strictly by input_type when provided
     raw_text = ""
+    selected_type = (input_type or "").strip().lower()
 
-    # Extract text from the provided source
-    if input_text:
-        raw_text = input_text
-    elif url:
-        raw_text = await extract_text_from_url(url)
-    elif file:
-        if file.filename.lower().endswith(".docx"):
-            raw_text = await extract_text_from_docx(file)
-        elif file.filename.lower().endswith(".pdf"):
-            raw_text = await extract_text_from_pdf(file)
+    if selected_type:
+        if selected_type == "text":
+            if not (input_text or "").strip():
+                return JSONResponse({"error": "文本输入为空"}, status_code=400)
+            raw_text = input_text or ""
+        elif selected_type == "url":
+            if not (url or "").strip():
+                return JSONResponse({"error": "URL 输入为空"}, status_code=400)
+            raw_text = await extract_text_from_url(url)  # may be empty -> handled below
+        elif selected_type == "file":
+            if not file:
+                return JSONResponse({"error": "未提供文件"}, status_code=400)
+            filename = (file.filename or "").lower()
+            if filename.endswith(".docx"):
+                raw_text = await extract_text_from_docx(file)
+            elif filename.endswith(".pdf"):
+                raw_text = await extract_text_from_pdf(file)
+            else:
+                raw_text = (await file.read()).decode("utf-8", errors="ignore")
         else:
-            raw_text = (await file.read()).decode("utf-8", errors="ignore")
+            return JSONResponse({"error": f"无效的 input_type: {selected_type}"}, status_code=400)
+    else:
+        # Backward compatibility: fall back to legacy priority (text -> url -> file)
+        if input_text:
+            raw_text = input_text
+        elif url:
+            raw_text = await extract_text_from_url(url)
+        elif file:
+            filename = (file.filename or "").lower()
+            if filename.endswith(".docx"):
+                raw_text = await extract_text_from_docx(file)
+            elif filename.endswith(".pdf"):
+                raw_text = await extract_text_from_pdf(file)
+            else:
+                raw_text = (await file.read()).decode("utf-8", errors="ignore")
+        else:
+            return JSONResponse({"error": "No input provided"}, status_code=400)
 
     if not raw_text.strip():
         return JSONResponse(

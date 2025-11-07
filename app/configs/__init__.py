@@ -1,3 +1,3 @@
 """
-Configuration package for Article ReAngle
+项目的配置和常量
 """

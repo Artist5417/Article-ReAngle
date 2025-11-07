@@ -1,11 +1,9 @@
 """
-LLM services for text rewriting and generation
-Uses OpenAI API
+准备弃用，旧的大模型调用逻辑
 """
 
 import os
 import requests
-from typing import Optional
 
 from app.configs.settings import OPENAI_BASE_URL, DEFAULT_MODEL
 
@@ -97,13 +95,6 @@ async def call_openai(
         return f"OpenAI连接错误: {str(e)}"
 
 
-async def call_free_llm(
-    messages: list, model: str = DEFAULT_MODEL, api_key: str = None
-) -> str:
-    """调用OpenAI API"""
-    return await call_openai(messages, model, api_key)
-
-
 async def rewrite_text(text: str, user_requirement: str, api_key: str = None) -> str:
     """根据用户要求改写文本"""
     # 统一"忠实改写器"提示词
@@ -142,4 +133,4 @@ async def rewrite_text(text: str, user_requirement: str, api_key: str = None) ->
         },
     ]
 
-    return await call_free_llm(messages, api_key=api_key)
+    return await call_openai(messages)

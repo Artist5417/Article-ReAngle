@@ -72,8 +72,11 @@
                                     </div>
                                 </div>
                                 <div class="control-group half-width">
-                                    <label for="apiKeyInput">API Key（可选）：</label>
-                                    <input type="password" id="apiKeyInput" placeholder="可选：输入API Key，或设置环境变量OPENAI_API_KEY">
+                                    <label for="modelSelector">选择语言模型：</label>
+                                    <select id="modelSelector" name="llm_type">
+                                        <option value="gpt-5" selected>gpt-5</option>
+                                        <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>

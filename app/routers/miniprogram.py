@@ -1,6 +1,5 @@
 """
-Bedtime story generation endpoints
-Handles JSON-based story generation with structured output
+处理小程序请求的API路由
 """
 
 import json
@@ -14,10 +13,7 @@ from fastapi.responses import JSONResponse
 from app.configs.settings import RESULTS_DIR
 from app.services.llms.llm import call_openai
 
-router = APIRouter(
-    prefix="/generate",
-    tags=["stories"],
-)
+miniprogram_router = APIRouter(prefix="/miniprogram")
 
 
 # Helper functions for story parameter processing
@@ -168,7 +164,8 @@ def write_result_file(job_id: str, data: dict) -> None:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
-@router.get("")
+# Story generation endpoints
+@miniprogram_router.get("/generate")
 async def generate_sample():
     """返回一个空模板，便于前端对齐字段名称与结构。"""
     return {
@@ -183,7 +180,7 @@ async def generate_sample():
     }
 
 
-@router.post("")
+@miniprogram_router.post("/generate")
 async def generate_story_post(request: Request):
     """
     Generate bedtime story based on JSON request
@@ -260,3 +257,25 @@ async def generate_story_post(request: Request):
         theme=theme,
         client=client,
     )
+
+
+# Results retrieval endpoints
+@miniprogram_router.get("/results/{job_id}.json")
+async def get_result(job_id: str):
+    """
+    Retrieve a previously generated result by job ID
+    """
+    path = os.path.join(RESULTS_DIR, f"{job_id}.json")
+
+    if not os.path.exists(path):
+        return JSONResponse({"error": "Result not found"}, status_code=404)
+
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return JSONResponse(data)
+    except Exception as e:
+        return JSONResponse(
+            {"error": f"读取结果失败: {str(e)}"},
+            status_code=500,
+        )

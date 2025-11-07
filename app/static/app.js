@@ -158,8 +158,9 @@ async function processArticle() {
     // 获取改写要求
     const promptInput = document.getElementById('promptInput').value.trim();
     
-    // 获取API Key（可选）
-    const apiKeyInput = document.getElementById('apiKeyInput').value.trim();
+    // 获取选择的语言模型
+    const modelSelector = document.getElementById('modelSelector');
+    const selectedModel = modelSelector ? modelSelector.value : 'gpt-5';
     
     // 显示加载状态
     processBtn.disabled = true;
@@ -191,9 +192,9 @@ async function processArticle() {
         formData.append('input_type', inputData.type);
 
         formData.append('prompt', promptInput);
-        formData.append('api_key', apiKeyInput);
+        formData.append('llm_type', selectedModel);
         
-        const response = await fetch('/process', {
+        const response = await fetch('/api/v1/rewrite', {
             method: 'POST',
             body: formData
         });

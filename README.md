@@ -20,14 +20,23 @@
 
 经过清洗，所有输入最终统一为一份 **结构化、干净的纯文本**，以便后续模型处理。
 
+### 多模型支持
+
+应用支持多个主流大语言模型，用户可以根据需求自由选择：
+
+- **OpenAI GPT-5** - 使用最新的 OpenAI Responses API，提供高质量的改写结果
+- **Google Gemini 2.5 Flash** - 快速响应，成本更低，适合大批量处理
+
+通过前端下拉菜单即可切换模型，系统会自动路由到相应的 API 客户端。
+
 ### 模型处理逻辑
 
-文章进入模型层后，会按照"两步走"的策略进行处理：
+文章进入模型层后，会根据用户选择的改写要求进行处理：
 
-1. **要点提炼**：调用 LLM 对文章进行总结，提取核心信息与逻辑框架，确保保留主要内容并保持客观中立
-2. **视角改写**：将提炼出的要点与用户提示词结合，根据指定的风格或立场生成新文章
+1. **内容理解**：LLM 深入理解原文的核心信息、逻辑结构和关键论点
+2. **风格改写**：根据用户提供的提示词（风格、立场、语气等），重新组织和表达内容
 
-用户提示词既可以控制风格（如"学术化""新闻报道""幽默化"），也可以指定立场（如"支持某政策"或"从消费者角度出发"）。
+用户提示词既可以控制风格（如"学术化""新闻报道""幽默化"），也可以指定立场（如"支持某政策"或"从消费者角度出发"）。系统还提供了预设风格模板，包括口语风、学术风、新闻风、公众号风和诗意风等。
 
 ### 输出与展示
 
@@ -48,29 +57,34 @@
 
 ### 本地运行步骤
 
-1. **安装依赖**：
+**安装依赖**：
 
 ```bash
 pip install -r requirements.txt
 ```
 
-2. **设置环境变量**：
+**设置环境变量**：
 
 ```bash
 # Windows PowerShell
-$env:OPENAI_API_KEY="your-api-key-here"
+$env:OPENAI_API_KEY="your-openai-api-key-here"
+$env:GEMINI_API_KEY="your-gemini-api-key-here"
 
 # Windows CMD
-set OPENAI_API_KEY=your-api-key-here
+set OPENAI_API_KEY=your-openai-api-key-here
+set GEMINI_API_KEY=your-gemini-api-key-here
 
 # Linux/Mac
-export OPENAI_API_KEY="your-api-key-here"
+export OPENAI_API_KEY="your-openai-api-key-here"
+export GEMINI_API_KEY="your-gemini-api-key-here"
 ```
 
-3. **启动应用**：
+**注意**：根据您选择的语言模型，至少需要设置一个 API Key。如果要使用 OpenAI 的 GPT 模型，需要设置 `OPENAI_API_KEY`；如果要使用 Google Gemini 模型，需要设置 `GEMINI_API_KEY`。
+
+**启动应用**：
 
 ```bash
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 或者直接运行：
@@ -79,42 +93,51 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 python -m app.main
 ```
 
-4. **访问应用**：
+**访问应用**：
 打开浏览器访问 <http://localhost:8000>
 
 ## 📁 项目结构
 
-Following FastAPI best practices with modular architecture:
+遵循 FastAPI 最佳实践的模块化架构：
 
 ```text
 Article-ReAngle/
-├── app/                      # Main application package
-│   ├── __init__.py           # Package initialization
-│   ├── main.py               # FastAPI application entry point
-│   ├── config.py             # Configuration and constants
-│   ├── dependencies.py       # Shared dependencies and utilities
-│   ├── routers/              # API route modules
+├── app/                      # 应用主包
+│   ├── __init__.py           # 包初始化文件
+│   ├── main.py               # FastAPI 应用入口
+│   ├── configs/              # 配置模块
 │   │   ├── __init__.py
-│   │   ├── articles.py       # Article rewriting endpoints
-│   │   ├── stories.py        # Story generation endpoints
-│   │   └── results.py        # Results retrieval endpoints
-│   ├── services/             # Business logic layer
+│   │   └── settings.py       # 应用配置和常量
+│   ├── routers/              # API 路由模块
+│   │   ├── __init__.py       # 路由注册
+│   │   ├── rewrite.py        # 文章改写端点
+│   │   └── miniprogram.py    # 故事生成和结果查询端点
+│   ├── schemas/              # 请求/响应数据模型
+│   │   ├── rewrite_schema.py      # 改写请求/响应模型
+│   │   └── miniprogram_schema.py  # 小程序数据模型
+│   ├── services/             # 业务逻辑层
 │   │   ├── __init__.py
-│   │   ├── extractors.py     # Content extraction (URL, PDF, DOCX)
-│   │   ├── llm.py            # LLM services (OpenAI integration)
-│   │   └── utils.py          # Utility functions
-│   ├── models/               # LLM client models (under development)
-│   │   ├── gemini_client.py
-│   │   ├── openai_client.py
-│   │   └── prompts/
-│   └── static/               # Frontend files
-│       ├── index.html        # Main page
-│       ├── app.js            # Frontend logic
-│       └── styles.css        # Styles
-├── results/                  # Generated content storage
-├── requirements.txt          # Project dependencies
-├── render.yaml               # Render deployment config
-└── README.md                 # Project documentation
+│   │   ├── extractors.py     # 内容提取（URL、PDF、DOCX）
+│   │   ├── utils.py          # 工具函数
+│   │   └── llms/             # 语言模型服务
+│   │       ├── __init__.py
+│   │       ├── llm.py              # 旧版 LLM 服务（OpenAI）
+│   │       ├── rewriting_client.py # 统一 LLM 接口
+│   │       ├── openai_client.py    # OpenAI Responses API 客户端
+│   │       ├── gemini_client.py    # Google Gemini API 客户端
+│   │       └── prompts/            # 系统提示词模板
+│   │           ├── openai_system_prompt.yaml
+│   │           └── gemini_system_prompt.yaml
+│   └── static/               # 前端文件
+│       ├── index.html        # 主页面
+│       ├── app.js            # 前端逻辑
+│       └── styles.css        # 样式文件
+├── docs/                     # 文档
+│   └── 小程序对接.md         # 小程序 API 对接指南
+├── results/                  # 生成内容存储目录
+├── requirements.txt          # 项目依赖
+├── render.yaml               # Render 部署配置
+└── README.md                 # 项目文档
 ```
 
 ## 🔄 程序运行流程
@@ -123,7 +146,7 @@ Article-ReAngle/
 
 ```text
 用户启动命令 → app/main.py (FastAPI 应用) → 加载环境变量 → 配置中间件 → 
-注册路由 (articles, stories, results) → 启动 Uvicorn 服务器 → 监听端口
+注册路由 (/api/v1/rewrite, /api/v1/miniprogram) → 启动 Uvicorn 服务器 → 监听端口
 ```
 
 ### 用户请求处理流程
@@ -133,47 +156,62 @@ Article-ReAngle/
 加载前端资源 → 用户界面准备就绪
 ```
 
-### 文章改写流程
+### 文章改写流程（多模型支持）
 
 ```text
-用户输入 → app/static/app.js → POST /process → app/routers/articles.py → 
+用户输入 → app/static/app.js → POST /api/v1/rewrite → app/routers/rewrite.py → 
 调用 app/services/extractors.py 提取内容 → 
-调用 app/services/llm.py rewrite_text() → OpenAI API → 
+调用 app/services/llms/rewriting_client.py → 
+根据选择的模型类型 (OpenAI/Gemini) → 
+  → app/services/llms/openai_client.py (GPT-5 Responses API) 或
+  → app/services/llms/gemini_client.py (Gemini 2.5 Flash) → 
 返回改写结果 → 前端展示
 ```
 
 ### 故事生成流程
 
 ```text
-用户请求 → POST /generate → app/routers/stories.py → 
-解析参数 (app/dependencies.py) → 
-生成故事 (app/services/llm.py) → 
-存储结果 → 返回 JSON 响应
+用户请求 → POST /api/v1/miniprogram/generate → app/routers/miniprogram.py → 
+解析参数和关键词 → 
+生成故事 (app/services/llms/llm.py call_openai) → 
+存储结果到 results/ 目录 → 返回 JSON 响应
 ```
 
 ### 模块架构
 
 ```text
 app/main.py (FastAPI 应用)
+├── 配置层 (configs/)
+│   └── settings.py         → 应用配置和常量
 ├── 路由层 (routers/)
-│   ├── articles.py → 文章改写 API
-│   ├── stories.py  → 故事生成 API
-│   └── results.py  → 结果查询 API
+│   ├── __init__.py         → API 路由注册 (/api/v1)
+│   ├── rewrite.py          → 文章改写 API
+│   └── miniprogram.py      → 故事生成和结果查询 API
+├── 数据层 (schemas/)
+│   ├── rewrite_schema.py   → 改写请求/响应模型
+│   └── miniprogram_schema.py → 小程序数据模型
 ├── 服务层 (services/)
-│   ├── extractors.py → 内容提取服务
-│   ├── llm.py        → LLM 调用服务
-│   └── utils.py      → 工具函数
-├── 配置层
-│   ├── config.py       → 应用配置
-│   └── dependencies.py → 共享依赖
-└── 静态资源 (static/) → 前端界面
+│   ├── extractors.py       → 内容提取服务
+│   ├── utils.py            → 工具函数
+│   └── llms/               → 大模型服务
+│       ├── llm.py              → 旧版 LLM 服务
+│       ├── rewriting_client.py → 统一 LLM 接口
+│       ├── openai_client.py    → OpenAI 客户端
+│       ├── gemini_client.py    → Gemini 客户端
+│       └── prompts/            → 系统提示词模板 (YAML)
+└── 静态资源 (static/)     → 前端界面
 ```
 
 ## 🛠️ 技术栈
 
-- **后端**: FastAPI, Uvicorn, OpenAI API, httpx, BeautifulSoup4, python-docx, pypdf
+- **后端框架**: FastAPI, Uvicorn
+- **大语言模型**:
+  - OpenAI GPT-5 (Responses API)
+  - Google Gemini 2.5 Flash
+- **内容提取**: httpx, BeautifulSoup4, readability-lxml, python-docx, pypdf, pytesseract
+- **数据处理**: Pydantic, PyYAML, rapidfuzz
 - **前端**: 原生 HTML/CSS/JavaScript, 响应式设计
-- **部署**: Render
+- **部署**: Render (云端部署)
 
 ## ❓ 常见问题
 

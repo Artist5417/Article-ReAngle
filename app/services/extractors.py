@@ -1,5 +1,5 @@
 """
-Text extraction services for various input sources
+根据不同输入源提取文本
 """
 
 import httpx

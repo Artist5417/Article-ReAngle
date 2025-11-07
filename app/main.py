@@ -1,3 +1,7 @@
+"""
+项目入口
+"""
+
 import os
 import uvicorn
 
@@ -7,13 +11,13 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.configs.settings import STATIC_DIR
-from app.routers import articles, stories, results
+from app.routers import v1_routers
 
 
-# Create FastAPI app
+# 创建FastAPI实例
 app = FastAPI(title="Article ReAngle")
 
-# Configure CORS
+# 配置跨域
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -22,15 +26,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files for frontend
+# 配置前端静态文件
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-# Include routers
-app.include_router(articles.router)
-app.include_router(stories.router)
-app.include_router(results.router)
+# 注册路由
+app.include_router(v1_routers)
 
 
+# 主界面端点
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
     try:

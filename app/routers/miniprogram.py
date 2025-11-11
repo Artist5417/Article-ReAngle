@@ -14,6 +14,7 @@ from app.configs.settings import RESULTS_DIR
 from app.services.llms.llm import call_openai
 
 miniprogram_router = APIRouter(prefix="/miniprogram")
+public_router = APIRouter()  # 根路径别名路由，兼容文档要求的 /generate /results /health
 
 
 # Helper functions for story parameter processing
@@ -184,7 +185,9 @@ async def generate_sample():
 async def generate_story_post(request: Request):
     """
     Generate bedtime story based on JSON request
-    Returns story content directly (synchronous response)
+    Returns:
+      - 若写盘成功：{ success, jobId, resultUrl }
+      - 若无法写盘：{ success, rewritten_text, title, length, age, theme, client }
     """
     content_type = request.headers.get("content-type", "").lower()
     if not content_type.startswith("application/json"):
@@ -231,25 +234,9 @@ async def generate_story_post(request: Request):
     except Exception as e:
         return JSONResponse({"error": f"生成失败: {str(e)}"}, status_code=500)
 
-    # Write result file (optional, for later GET queries)
+    # Try to persist result; if success, return jobId + resultUrl; else return story directly
     job_id = uuid.uuid4().hex
-    try:
-        write_result_file(
-            job_id,
-            build_story_output_body(
-                story_obj=story_obj,
-                title_hint=title_hint,
-                length=length,
-                age=age,
-                theme=theme,
-                client=client,
-            ),
-        )
-    except Exception:
-        pass
-
-    # Return story directly
-    return build_story_output_body(
+    result_payload = build_story_output_body(
         story_obj=story_obj,
         title_hint=title_hint,
         length=length,
@@ -257,6 +244,20 @@ async def generate_story_post(request: Request):
         theme=theme,
         client=client,
     )
+    try:
+        write_result_file(job_id, result_payload)
+        # 构造两步模式响应
+        # 从请求计算 resultUrl（基于当前站点）
+        base_url = str(request.base_url).rstrip("/")
+        result_url = f"{base_url}/results/{job_id}.json"
+        return {
+            "success": True,
+            "jobId": job_id,
+            "resultUrl": result_url,
+        }
+    except Exception:
+        # 文件系统不可写：直接返回故事（同步直返模式）
+        return result_payload
 
 
 # Results retrieval endpoints
@@ -279,3 +280,30 @@ async def get_result(job_id: str):
             {"error": f"读取结果失败: {str(e)}"},
             status_code=500,
         )
+
+
+# -------- 根路径别名路由（对齐文档） --------
+
+@public_router.get("/generate")
+async def public_generate_sample():
+    return await generate_sample()
+
+
+@public_router.post("/generate")
+async def public_generate_story_post(request: Request):
+    return await generate_story_post(request)
+
+
+@public_router.get("/results/{job_id}.json")
+async def public_get_result(job_id: str):
+    return await get_result(job_id)
+
+
+@public_router.get("/health")
+async def health():
+    import time
+    return {
+        "status": "healthy",
+        "message": "睡前故事生成器后端服务运行正常",
+        "timestamp": time.time(),
+    }

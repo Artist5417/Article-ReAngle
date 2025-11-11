@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.configs.settings import STATIC_DIR
 from app.routers import v1_routers
+from app.routers.miniprogram import public_router
 
 
 # 创建FastAPI实例
@@ -31,6 +32,7 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # 注册路由
 app.include_router(v1_routers)
+app.include_router(public_router)  # 文档要求的根路径别名：/generate /results /health
 
 
 # 主界面端点
@@ -48,4 +50,4 @@ async def read_root():
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="=127.0.0.1", port="8000", reload=True)
+    uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)

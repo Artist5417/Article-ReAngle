@@ -32,7 +32,6 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # 注册路由
 app.include_router(v1_routers)
-app.include_router(public_router)  # 文档要求的根路径别名：/generate /results /health
 
 
 # 主界面端点

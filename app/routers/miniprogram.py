@@ -14,7 +14,6 @@ from app.configs.settings import RESULTS_DIR
 from app.services.llms.llm import call_openai
 
 miniprogram_router = APIRouter(prefix="/miniprogram")
-public_router = APIRouter()  # 根路径别名路由，兼容文档要求的 /generate /results /health
 
 
 # Helper functions for story parameter processing
@@ -165,6 +164,17 @@ def write_result_file(job_id: str, data: dict) -> None:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
+@miniprogram_router.get("/health")
+async def health():
+    import time
+
+    return {
+        "status": "healthy",
+        "message": "睡前故事生成器后端服务运行正常",
+        "timestamp": time.time(),
+    }
+
+
 # Story generation endpoints
 @miniprogram_router.get("/generate")
 async def generate_sample():
@@ -280,30 +290,3 @@ async def get_result(job_id: str):
             {"error": f"读取结果失败: {str(e)}"},
             status_code=500,
         )
-
-
-# -------- 根路径别名路由（对齐文档） --------
-
-@public_router.get("/generate")
-async def public_generate_sample():
-    return await generate_sample()
-
-
-@public_router.post("/generate")
-async def public_generate_story_post(request: Request):
-    return await generate_story_post(request)
-
-
-@public_router.get("/results/{job_id}.json")
-async def public_get_result(job_id: str):
-    return await get_result(job_id)
-
-
-@public_router.get("/health")
-async def health():
-    import time
-    return {
-        "status": "healthy",
-        "message": "睡前故事生成器后端服务运行正常",
-        "timestamp": time.time(),
-    }

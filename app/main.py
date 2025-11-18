@@ -12,7 +12,6 @@ from fastapi.staticfiles import StaticFiles
 
 from app.configs.settings import STATIC_DIR
 from app.routers import v1_routers
-from app.routers.miniprogram import public_router
 
 
 # 创建FastAPI实例

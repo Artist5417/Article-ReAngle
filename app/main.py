@@ -22,6 +22,7 @@ from app.core.handlers import (
     global_exception_handler
 )
 
+
 # 初始化日志
 setup_logging()
 

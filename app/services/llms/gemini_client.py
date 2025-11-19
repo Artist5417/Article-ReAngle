@@ -4,10 +4,11 @@
 
 import os
 import yaml
-
 from google import genai
+from loguru import logger
 
 from app.configs.settings import SYSTEMZ_PROMPTS_DIR
+from app.core.exceptions import LLMProviderError
 
 
 async def get_rewriting_result(
@@ -26,25 +27,42 @@ async def get_rewriting_result(
     Returns:
         GenerateContentResponse对象
     """
-    # 从yaml文件中加载system prompt
-    prompt_file = os.path.join(SYSTEMZ_PROMPTS_DIR, "gemini_system_prompt.yaml")
+    try:
+        logger.info(f"Calling Gemini API (model: {model})")
 
-    with open(prompt_file, "r", encoding="utf-8") as f:
-        prompt_data = yaml.safe_load(f)
-        system_prompt = prompt_data.get("system_prompt", "")
+        # 从yaml文件中加载system prompt
+        prompt_file = os.path.join(SYSTEMZ_PROMPTS_DIR, "gemini_system_prompt.yaml")
 
-    # 初始化Gemini client，此处会自动获取环境变量中的“GEMINI_API_KEY”
-    client = genai.Client()
+        try:
+            with open(prompt_file, "r", encoding="utf-8") as f:
+                prompt_data = yaml.safe_load(f)
+                system_prompt = prompt_data.get("system_prompt", "")
+        except Exception as e:
+            logger.error(f"Failed to load system prompt: {e}")
+            raise LLMProviderError(f"Configuration error: Failed to load system prompt: {str(e)}")
 
-    # 合并system prompt，instruction，和source
-    combined_content = (
-        f"{system_prompt}\n\nInstruction: {instruction}\n\nSource: {source}"
-    )
+        # 初始化Gemini client，此处会自动获取环境变量中的“GEMINI_API_KEY”
+        if not os.getenv("GEMINI_API_KEY"):
+            logger.error("GEMINI_API_KEY not found in environment")
+            raise LLMProviderError("Server configuration error: Missing Gemini API Key")
 
-    # 通过models创建任务，获取response对象
-    response = client.models.generate_content(
-        model=model,
-        contents=combined_content,
-    )
+        client = genai.Client()
 
-    return response
+        # 合并system prompt，instruction，和source
+        combined_content = (
+            f"{system_prompt}\n\nInstruction: {instruction}\n\nSource: {source}"
+        )
+
+        # 通过models创建任务，获取response对象
+        logger.debug("Sending request to Gemini...")
+        response = client.models.generate_content(
+            model=model,
+            contents=combined_content,
+        )
+        logger.info("Gemini API request successful")
+        
+        return response
+
+    except Exception as e:
+        logger.exception("Gemini API call failed")
+        raise LLMProviderError(f"Gemini API error: {str(e)}")

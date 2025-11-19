@@ -17,3 +17,4 @@ markdown==3.7
 jinja2==3.1.4
 openai==2.3.0
 google-genai==1.44.0
+loguru==0.7.2

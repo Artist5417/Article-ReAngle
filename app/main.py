@@ -9,13 +9,29 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.exceptions import RequestValidationError
 
 from app.configs.settings import STATIC_DIR
 from app.routers import v1_routers
+from app.configs.logger import setup_logging
+from app.middleware.request_logging import RequestLoggingMiddleware
+from app.core.exceptions import AppException
+from app.core.handlers import (
+    app_exception_handler,
+    validation_exception_handler,
+    global_exception_handler
+)
 
+
+# 初始化日志
+setup_logging()
 
 # 创建FastAPI实例
 app = FastAPI(title="Article ReAngle")
+
+# 配置中间件 (注意：FastAPI中间件按后进先出顺序执行)
+# RequestLoggingMiddleware 放在最外层(最后添加)，以便捕获所有请求
+app.add_middleware(RequestLoggingMiddleware)
 
 # 配置跨域
 app.add_middleware(
@@ -25,6 +41,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 注册异常处理器
+app.add_exception_handler(AppException, app_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(Exception, global_exception_handler)
 
 # 配置前端静态文件
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

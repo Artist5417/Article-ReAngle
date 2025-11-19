@@ -2,8 +2,10 @@
 调用大模型的统一接口
 """
 
+from loguru import logger
 from app.schemas.rewrite_schema import LLMType
 from app.services.llms import openai_client, gemini_client
+from app.core.exceptions import LLMProviderError
 
 
 async def get_rewriting_result(
@@ -22,27 +24,41 @@ async def get_rewriting_result(
     Returns:
         从response中提取洗稿结果文本
     """
-    # 获取模型名称
-    model = llm_type.value
+    try:
+        # 获取模型名称
+        model = llm_type.value
+        logger.info(f"Processing rewrite request with provider: {llm_type.name}, model: {model}")
 
-    # 根据模型选择调用对应client
-    if llm_type == LLMType.OPENAI:
-        response = await openai_client.get_rewriting_result(
-            instruction=instruction,
-            source=source,
-            model=model,
-        )
-        # 从Response对象中提取文本
-        # TODO: 后期从metadata中分析token用量等
-        rewritten_text = response.output_text
-    elif llm_type == LLMType.GEMINI:
-        response = await gemini_client.get_rewriting_result(
-            instruction=instruction,
-            source=source,
-            model=model,
-        )
-        # 从GenerateContentResponse对象中提取文本
-        # TODO: 后期从metadata中分析token用量等
-        rewritten_text = response.text
+        # 根据模型选择调用对应client
+        if llm_type == LLMType.OPENAI:
+            response = await openai_client.get_rewriting_result(
+                instruction=instruction,
+                source=source,
+                model=model,
+            )
+            # 从Response对象中提取文本
+            # TODO: 后期从metadata中分析token用量等
+            rewritten_text = response.output_text
+            
+        elif llm_type == LLMType.GEMINI:
+            response = await gemini_client.get_rewriting_result(
+                instruction=instruction,
+                source=source,
+                model=model,
+            )
+            # 从GenerateContentResponse对象中提取文本
+            # TODO: 后期从metadata中分析token用量等
+            rewritten_text = response.text
+        
+        if not rewritten_text:
+            logger.warning(f"Provider {llm_type.name} returned empty text")
+            raise LLMProviderError(f"Received empty response from {llm_type.name}")
 
-    return rewritten_text
+        logger.info(f"Rewrite completed successfully. Output length: {len(rewritten_text)}")
+        return rewritten_text
+
+    except LLMProviderError:
+        raise
+    except Exception as e:
+        logger.exception(f"Error in rewriting client using {llm_type.name}")
+        raise LLMProviderError(f"Unexpected error during rewriting: {str(e)}")

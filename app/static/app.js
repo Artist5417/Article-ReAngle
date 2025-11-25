@@ -186,6 +186,9 @@ async function processArticle() {
         } else if (inputData.type === 'url') {
             formData.append('url', inputData.content);
             console.log('添加URL数据到FormData:', inputData.content);
+		} else if (inputData.type === 'youtube') {
+			formData.append('youtube_url', inputData.content);
+			console.log('添加YouTube链接到FormData:', inputData.content);
         }
         
         // 明确告知后端输入来源类型
@@ -240,6 +243,7 @@ function getInputData() {
     if (panelId.startsWith('text-')) inputType = 'text';
     else if (panelId.startsWith('file-')) inputType = 'file';
     else if (panelId.startsWith('url-')) inputType = 'url';
+	else if (panelId.startsWith('youtube-')) inputType = 'youtube';
 
     // 根据当前类型仅读取对应控件
     if (inputType === 'text') {
@@ -260,6 +264,13 @@ function getInputData() {
         const value = (urlInput?.value || '').trim();
         if (!value) return null;
         return { type: 'url', content: value };
+    }
+
+	if (inputType === 'youtube') {
+		const ytInput = document.getElementById('youtubeInput');
+		const value = (ytInput?.value || '').trim();
+		if (!value) return null;
+		return { type: 'youtube', content: value };
     }
 
     console.log('无法识别的输入类型，或当前面板无内容');

@@ -170,6 +170,26 @@ h2 {
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+/* 更大更美观的链接输入卡片容器（URL 与 YouTube 共用） */
+.link-input-card {
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+}
+.link-input-card input[type="url"] {
+    width: 100%;
+    padding: 16px 18px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 16px;
+}
+.link-input-card input[type="url"]:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
 /* 风格控制 */
 .style-controls {
     display: grid;

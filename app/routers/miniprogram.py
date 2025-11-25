@@ -121,7 +121,7 @@ async def generate_story(
         "【语言】{langs}\n"
         "【附加提示】{extra}\n"
         "【可选原文】{base_text}\n"
-        '请直接返回一个JSON对象，形如：{"title":"...","rewritten_text":"..."}'
+        '请直接返回一个JSON对象，形如：{{"title":"...","rewritten_text":"..."}}'
     ).format(
         material=material or "",
         requirement=requirement or "",

@@ -11,6 +11,7 @@ class InputType(str, Enum):
     TEXT = "text"
     URL = "url"
     FILE = "file"
+    MULTI = "multi"
 
 
 class LLMType(str, Enum):
@@ -24,6 +25,10 @@ class RewriteRequest(BaseModel):
     input_text: str | None = None
     url: str | None = None
     file: UploadFile | None = None
+    # 多源输入模式下，前端会传一个 JSON 字符串数组
+    # 结构示例：[{id,type,content,contentKey,meta:{filename,size}}]
+    inputs: str | None = None
+    input_mode: str | None = None
     prompt: str | None = Field(default="改写成新闻报道风格")
 
 

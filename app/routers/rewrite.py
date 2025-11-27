@@ -2,8 +2,9 @@
 处理洗稿请求的API路由
 """
 
-from typing import Annotated
-from fastapi import APIRouter, Form
+from typing import Annotated, List, Dict, Any
+import json
+from fastapi import APIRouter, Form, Request
 from loguru import logger
 
 from app.schemas.rewrite_schema import (
@@ -28,12 +29,71 @@ rewrite_router = APIRouter(prefix="/rewrite")
 
 
 @rewrite_router.post("", response_model=RewriteResponse)
-async def rewrite_article(rewrite_request: Annotated[RewriteRequest, Form()]):
+async def rewrite_article(request: Request, rewrite_request: Annotated[RewriteRequest, Form()]):
     clean_text = ""
     
     # 根据输入类型处理
     try:
-        if rewrite_request.input_type == InputType.TEXT:
+        # 多源输入模式：inputs 为 JSON 字符串，且 input_type == multi
+        if rewrite_request.input_type == InputType.MULTI or (rewrite_request.inputs and rewrite_request.inputs.strip()):
+            try:
+                form_data = await request.form()
+                # 解析前端传来的 inputs JSON
+                items: List[Dict[str, Any]] = json.loads(rewrite_request.inputs or "[]")
+                parts: List[str] = []
+                for it in items:
+                    it_type = (it.get("type") or "").lower()
+                    if it_type == "text":
+                        content = it.get("content") or ""
+                        if content.strip():
+                            parts.append(f"[文本]\n{content.strip()}")
+                    elif it_type == "url":
+                        url = (it.get("content") or "").strip()
+                        if url:
+                            # 普通 URL 走提取
+                            try:
+                                extracted = await extract_text_from_url(url)
+                                parts.append(f"[链接]\n源: {url}\n{extracted.strip()}")
+                            except Exception as e:
+                                logger.warning(f"URL extraction failed in multi mode: {e}")
+                                # 退化为直接附上 URL 文本
+                                parts.append(f"[链接]\n{url}")
+                    elif it_type == "youtube":
+                        # 先按“普通添加”处理：不做解析，仅作为原始链接
+                        yt = (it.get("content") or "").strip()
+                        if yt:
+                            parts.append(f"[YouTube]\n{yt}")
+                    elif it_type == "file":
+                        # 文件通过动态字段名 file_{id} 上传
+                        content_key = it.get("contentKey") or f"file_{it.get('id')}"
+                        upload = form_data.get(content_key)
+                        if not upload:
+                            logger.warning(f"File with key {content_key} not found in form")
+                            continue
+                        filename = (upload.filename or "").lower()
+                        try:
+                            if filename.endswith(".docx"):
+                                extracted = await extract_text_from_docx(upload)
+                            elif filename.endswith(".pdf"):
+                                extracted = await extract_text_from_pdf(upload)
+                            else:
+                                content = await upload.read()
+                                try:
+                                    extracted = content.decode("utf-8")
+                                except UnicodeDecodeError:
+                                    extracted = content.decode("gbk", errors="ignore")
+                            parts.append(f"[文件] {filename}\n{(extracted or '').strip()}")
+                        except Exception as e:
+                            logger.error(f"Multi-mode file extraction failed for {filename}: {e}")
+                            raise ContentExtractionError(f"Failed to extract content from file: {str(e)}")
+                    else:
+                        logger.warning(f"Unknown item type in multi inputs: {it_type}")
+                clean_text = "\n\n---\n\n".join([p for p in parts if p.strip()])
+            except Exception as e:
+                logger.exception("Failed to process multi inputs")
+                raise ContentExtractionError(f"Failed to process multi inputs: {str(e)}")
+
+        elif rewrite_request.input_type == InputType.TEXT:
             # 文本输入
             if not rewrite_request.input_text:
                 raise InvalidInputError("Input text is empty")

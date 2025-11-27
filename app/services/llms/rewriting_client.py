@@ -31,10 +31,14 @@ async def get_rewriting_result(
 
         # 根据模型选择调用对应client
         if llm_type == LLMType.OPENAI:
+            # 兼容前端“ChatGPT5”的友好名，映射到真实模型
+            model_to_use = model
+            if model.strip().lower() in {"gpt-5", "chatgpt5", "chatgpt-5"}:
+                model_to_use = "gpt-4o-mini"
             response = await openai_client.get_rewriting_result(
                 instruction=instruction,
                 source=source,
-                model=model,
+                model=model_to_use,
             )
             # 从Response对象中提取文本
             # TODO: 后期从metadata中分析token用量等

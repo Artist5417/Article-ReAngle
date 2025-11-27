@@ -1,5 +1,6 @@
 // 全局变量
 let currentResult = null;
+let inputItems = []; // 多源输入篮
 
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
@@ -148,11 +149,17 @@ async function processArticle() {
     const loading = document.getElementById('loading');
     const resultSection = document.getElementById('result-section');
     
-    // 获取输入数据（仅基于当前激活的输入页签）
-    const inputData = getInputData();
-    if (!inputData) {
-        alert('请提供要处理的文章内容！');
-        return;
+    // 若已添加队列非空，走多源提交；否则保持单源逻辑
+    const useMulti = Array.isArray(inputItems) && inputItems.length > 0;
+
+    let inputData = null;
+    if (!useMulti) {
+        // 获取输入数据（仅基于当前激活的输入页签）
+        inputData = getInputData();
+        if (!inputData) {
+            alert('请提供要处理的文章内容！');
+            return;
+        }
     }
     
     // 获取改写要求
@@ -171,36 +178,36 @@ async function processArticle() {
     showProcessingState();
     
     try {
-        // 构建FormData
-        const formData = new FormData();
-        
-        console.log('输入数据类型:', inputData.type);
-        console.log('输入数据内容:', inputData.content);
-        
-        if (inputData.type === 'text') {
-            formData.append('input_text', inputData.content);
-            console.log('添加文本数据到FormData');
-        } else if (inputData.type === 'file') {
-            formData.append('file', inputData.content);
-            console.log('添加文件数据到FormData');
-        } else if (inputData.type === 'url') {
-            formData.append('url', inputData.content);
-            console.log('添加URL数据到FormData:', inputData.content);
-		} else if (inputData.type === 'youtube') {
-			formData.append('youtube_url', inputData.content);
-			console.log('添加YouTube链接到FormData:', inputData.content);
+        let response;
+        if (useMulti) {
+            const formData = buildMultiFormData(promptInput, selectedModel);
+            response = await fetch('/api/v1/rewrite', { method: 'POST', body: formData });
+        } else {
+            // 构建FormData（单源）
+            const formData = new FormData();
+            console.log('输入数据类型:', inputData.type);
+            console.log('输入数据内容:', inputData.content);
+            
+            if (inputData.type === 'text') {
+                formData.append('input_text', inputData.content);
+                console.log('添加文本数据到FormData');
+            } else if (inputData.type === 'file') {
+                formData.append('file', inputData.content);
+                console.log('添加文件数据到FormData');
+            } else if (inputData.type === 'url') {
+                formData.append('url', inputData.content);
+                console.log('添加URL数据到FormData:', inputData.content);
+            } else if (inputData.type === 'youtube') {
+                formData.append('youtube_url', inputData.content);
+                console.log('添加YouTube链接到FormData:', inputData.content);
+            }
+            
+            // 明确告知后端输入来源类型
+            formData.append('input_type', inputData.type);
+            formData.append('prompt', promptInput);
+            formData.append('llm_type', selectedModel);
+            response = await fetch('/api/v1/rewrite', { method: 'POST', body: formData });
         }
-        
-        // 明确告知后端输入来源类型
-        formData.append('input_type', inputData.type);
-
-        formData.append('prompt', promptInput);
-        formData.append('llm_type', selectedModel);
-        
-        const response = await fetch('/api/v1/rewrite', {
-            method: 'POST',
-            body: formData
-        });
         
         // 检查响应状态
         if (!response.ok) {
@@ -275,6 +282,113 @@ function getInputData() {
 
     console.log('无法识别的输入类型，或当前面板无内容');
     return null;
+}
+
+// ========== 多源输入篮：添加/删除/渲染 ==========
+function addCurrentInput() {
+    const data = getInputData();
+    if (!data) {
+        alert('请输入内容后再添加');
+        return;
+    }
+    const id = `it_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const item = { id, type: data.type, meta: { createdAt: Date.now() } };
+    if (data.type === 'file') {
+        const f = data.content;
+        item.payload = null;
+        item.meta.filename = f.name;
+        item.meta.size = f.size;
+        item.meta.fileField = `file_${id}`;
+        item._file = f; // 保留引用，构建FormData时使用
+    } else {
+        const value = (data.content || '').toString();
+        item.payload = value;
+        if (data.type === 'text') item.meta.title = `文本 · ${value.slice(0, 20)}`;
+        if (data.type === 'url') item.meta.title = `链接 · ${value}`;
+        if (data.type === 'youtube') item.meta.title = `YouTube · ${value}`;
+    }
+    if (!item.meta.title && data.type === 'file') {
+        item.meta.title = `文件 · ${item.meta.filename || '未命名'}`;
+    }
+
+    inputItems.push(item);
+    renderAddedList();
+    // 轻提示
+    try { 
+        console.log('已添加到输入篮:', item);
+    } catch (_) {}
+}
+
+function removeInputItem(id) {
+    inputItems = inputItems.filter(it => it.id !== id);
+    renderAddedList();
+}
+
+function clearAllInputs() {
+    inputItems = [];
+    renderAddedList();
+}
+
+function renderAddedList() {
+    const list = document.getElementById('addedList');
+    if (!list) return;
+    if (!inputItems.length) {
+        list.innerHTML = '<div class="queue-empty">还没有添加内容，去左侧添加吧</div>';
+        return;
+    }
+    const iconOf = (type) => {
+        if (type === 'text') return 'T';
+        if (type === 'file') return 'F';
+        if (type === 'url') return 'U';
+        if (type === 'youtube') return 'Y';
+        return '?';
+    };
+    const html = inputItems.map((it, idx) => {
+        const title = it.meta?.title || `${it.type} #${idx + 1}`;
+        const meta = it.type === 'file' ? (it.meta?.filename || '') : '';
+        return `<div class="queue-item" data-id="${it.id}">
+            <div class="qi-icon">${iconOf(it.type)}</div>
+            <div class="qi-body">
+                <div class="qi-title">${escapeHtml(title)}</div>
+                <div class="qi-meta">${escapeHtml(meta)}</div>
+            </div>
+            <button class="qi-del" onclick="removeInputItem('${it.id}')">删除</button>
+        </div>`;
+    }).join('');
+    list.innerHTML = html;
+}
+
+function buildMultiFormData(promptInput, selectedModel) {
+    const formData = new FormData();
+    const inputsForJson = inputItems.map(it => {
+        if (it.type === 'file') {
+            return {
+                id: it.id,
+                type: it.type,
+                contentKey: it.meta?.fileField,
+                meta: { filename: it.meta?.filename, size: it.meta?.size }
+            };
+        }
+        return {
+            id: it.id,
+            type: it.type,
+            content: it.payload,
+            meta: it.meta || {}
+        };
+    });
+    // 附加文件数据
+    inputItems.forEach(it => {
+        if (it.type === 'file' && it._file) {
+            const field = it.meta?.fileField || `file_${it.id}`;
+            formData.append(field, it._file);
+        }
+    });
+    formData.append('inputs', JSON.stringify(inputsForJson));
+    formData.append('input_type', 'multi');
+    formData.append('input_mode', 'multi');
+    formData.append('prompt', promptInput);
+    formData.append('llm_type', selectedModel);
+    return formData;
 }
 
 // 显示处理中状态

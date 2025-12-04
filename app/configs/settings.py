@@ -15,7 +15,7 @@ RESULTS_DIR = os.path.join(os.path.dirname(BASE_DIR), "results")
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
 # system prompts存放地址
-SYSTEMZ_PROMPTS_DIR = os.path.join(BASE_DIR, "services", "llms", "prompts")
+SYSTEM_PROMPTS_DIR = os.path.join(BASE_DIR, "services", "llms", "prompts")
 
 # 准备弃用：旧版大模型调用
 OPENAI_BASE_URL = "https://api.openai.com/v1"

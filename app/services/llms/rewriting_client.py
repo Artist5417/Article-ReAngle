@@ -4,7 +4,7 @@
 
 from loguru import logger
 from app.schemas.rewrite_schema import LLMType
-from app.services.llms import openai_client, gemini_client
+from app.services.llms import openai_client, gemini_client, qwen_client
 from app.core.exceptions import LLMProviderError
 
 
@@ -27,7 +27,9 @@ async def get_rewriting_result(
     try:
         # 获取模型名称
         model = llm_type.value
-        logger.info(f"Processing rewrite request with provider: {llm_type.name}, model: {model}")
+        logger.info(
+            f"Processing rewrite request with provider: {llm_type.name}, model: {model}"
+        )
 
         # 根据模型选择调用对应client
         if llm_type == LLMType.OPENAI:
@@ -37,9 +39,8 @@ async def get_rewriting_result(
                 model=model,
             )
             # 从Response对象中提取文本
-            # TODO: 后期从metadata中分析token用量等
             rewritten_text = response.output_text
-            
+
         elif llm_type == LLMType.GEMINI:
             response = await gemini_client.get_rewriting_result(
                 instruction=instruction,
@@ -47,14 +48,24 @@ async def get_rewriting_result(
                 model=model,
             )
             # 从GenerateContentResponse对象中提取文本
-            # TODO: 后期从metadata中分析token用量等
             rewritten_text = response.text
-        
+
+        elif llm_type == LLMType.QWEN:
+            completion = await qwen_client.get_rewriting_result(
+                instruction=instruction,
+                source=source,
+                model=model,
+            )
+            # 从Completion对象中提取文本
+            rewritten_text = completion.choices[0].message.content
+
         if not rewritten_text:
             logger.warning(f"Provider {llm_type.name} returned empty text")
             raise LLMProviderError(f"Received empty response from {llm_type.name}")
 
-        logger.info(f"Rewrite completed successfully. Output length: {len(rewritten_text)}")
+        logger.info(
+            f"Rewrite completed successfully. Output length: {len(rewritten_text)}"
+        )
         return rewritten_text
 
     except LLMProviderError:

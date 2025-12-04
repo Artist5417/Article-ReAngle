@@ -16,6 +16,7 @@ class InputType(str, Enum):
 class LLMType(str, Enum):
     OPENAI = "gpt-5"
     GEMINI = "gemini-2.5-flash"
+    QWEN = "qwen-flash"
 
 
 class RewriteRequest(BaseModel):

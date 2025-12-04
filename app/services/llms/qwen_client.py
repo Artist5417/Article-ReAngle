@@ -1,5 +1,5 @@
 """
-调用OpenAI API洗稿
+使用Qwen洗稿，通过OpenAI SDK调用
 """
 
 import os
@@ -14,24 +14,24 @@ from app.core.exceptions import LLMProviderError
 async def get_rewriting_result(
     instruction: str,
     source: str,
-    model: str = "gpt-5",
+    model: str = "qwen-flash",
 ):
     """
-    调用OpenAI Responses API洗稿
+    调用OpenAI Completions API洗稿
 
     Args:
         instruction: 用户输入的洗稿方式或选择的洗稿风格预设
         source: 原始文章
-        model: 模型选择，默认为gpt-5
+        model: 模型选择，默认为qwen-flash
 
     Returns:
-        OpenAI Response对象
+        OpenAI Completion对象
     """
     try:
-        logger.info(f"Calling OpenAI API (model: {model})")
+        logger.info(f"Calling Qwen API (model: {model})")
 
         # 从yaml文件中加载system prompt
-        prompt_file = os.path.join(SYSTEM_PROMPTS_DIR, "openai_system_prompt.yaml")
+        prompt_file = os.path.join(SYSTEM_PROMPTS_DIR, "qwen_system_prompt.yaml")
 
         try:
             with open(prompt_file, "r", encoding="utf-8") as f:
@@ -43,18 +43,20 @@ async def get_rewriting_result(
                 f"Configuration error: Failed to load system prompt: {str(e)}"
             )
 
-        if not os.getenv("OPENAI_API_KEY"):
-            logger.error("OPENAI_API_KEY not found in environment")
-            raise LLMProviderError("Server configuration error: Missing OpenAI API Key")
+        if not os.getenv("DASHSCOPE_API_KEY"):
+            logger.error("DASHSCOPE_API_KEY not found in environment")
+            raise LLMProviderError("Server configuration error: Missing Qwen API Key")
 
-        # 初始化OpenAI client，此处会自动获取环境变量中的“OPENAI_API_KEY”
-        client = OpenAI()
+        # 初始化OpenAI client，此处需要从环境变量中获取‘DASHSCOPE_API_KEY’，并设定Qwen新加坡baseURL
+        client = OpenAI(
+            api_key=os.getenv("DASHSCOPE_API_KEY"),
+            base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+        )
 
-        # 通过Responses创建任务，获取response对象
-        logger.debug("Sending request to OpenAI...")
-        response = client.responses.create(
+        logger.debug("Sending request to Qwen...")
+        completion = client.chat.completions.create(
             model=model,
-            input=[
+            messages=[
                 {
                     # system prompt
                     "role": "system",
@@ -72,9 +74,9 @@ async def get_rewriting_result(
                 },
             ],
         )
-        logger.info("OpenAI API request successful")
-        return response
+        logger.info("Qwen API request successful")
+        return completion
 
     except Exception as e:
-        logger.exception("OpenAI API call failed")
-        raise LLMProviderError(f"OpenAI API error: {str(e)}")
+        logger.exception("Qwen API call failed")
+        raise LLMProviderError(f"Qwen API error: {str(e)}")

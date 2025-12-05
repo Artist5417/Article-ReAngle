@@ -1,11 +1,16 @@
+<!--
+    Article ReAngle - 主页面
+-->
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Article ReAngle - 洗稿程序</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -23,8 +28,8 @@
                         <div class="input-tabs">
                             <button class="tab-btn active" onclick="switchTab('text')">粘贴文本</button>
                             <button class="tab-btn" onclick="switchTab('file')">上传文件</button>
-							<button class="tab-btn" onclick="switchTab('url')">输入链接</button>
-							<button class="tab-btn" onclick="switchTab('youtube')">YouTube 链接</button>
+                            <button class="tab-btn" onclick="switchTab('url')">输入链接</button>
+                            <button class="tab-btn" onclick="switchTab('youtube')">YouTube 链接</button>
                         </div>
 
                         <!-- 文本输入 -->
@@ -35,10 +40,10 @@
                         <!-- 文件上传 -->
                         <div id="file-input" class="input-panel">
                             <div class="file-upload">
-								<input type="file" id="fileInput" accept=".txt,.docx,.pdf,image/*">
+                                <input type="file" id="fileInput" accept=".txt,.docx,.pdf,image/*">
                                 <label for="fileInput" class="file-label">
                                     <span>📁 选择文件</span>
-									<small>支持 TXT、Word、PDF、JPG、PNG 格式</small>
+                                    <small>支持 TXT、Word、PDF、JPG、PNG 格式</small>
                                 </label>
                                 <div id="selected-file" class="selected-file hidden">
                                     <span id="fileName"></span>
@@ -49,17 +54,18 @@
 
                         <!-- URL输入 -->
                         <div id="url-input" class="input-panel">
-							<div class="link-input-card">
-								<input type="url" id="urlInput" placeholder="请输入文章链接...">
-							</div>
+                            <div class="link-input-card">
+                                <input type="url" id="urlInput" placeholder="请输入文章链接...">
+                            </div>
                         </div>
 
-						<!-- YouTube 链接输入 -->
-						<div id="youtube-input" class="input-panel">
-							<div class="link-input-card">
-								<input type="url" id="youtubeInput" placeholder="请输入 YouTube 视频链接..." style="width:100%;padding:15px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;">
-							</div>
-						</div>
+                        <!-- YouTube 链接输入 -->
+                        <div id="youtube-input" class="input-panel">
+                            <div class="link-input-card">
+                                <input type="url" id="youtubeInput" placeholder="请输入 YouTube 视频链接..."
+                                    style="width:100%;padding:15px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;">
+                            </div>
+                        </div>
                     </section>
 
                     <!-- 洗稿设置 -->
@@ -70,14 +76,22 @@
                                 <div class="control-group half-width">
                                     <label for="promptInput">请输入改写要求：</label>
                                     <div class="prompt-wrapper" id="promptWrapper">
-                                        <textarea id="promptInput" placeholder="例如：学术化表达、轻松幽默语气、支持环保政策、批判技术垄断"></textarea>
-                                        <button type="button" class="prompt-dropdown-btn" onclick="togglePromptDropdown()" aria-label="选择预设风格">▾</button>
-                                        <div id="presetDropdown" class="preset-dropdown hidden" role="listbox" aria-label="预设风格列表">
-                                            <button type="button" class="preset-item" onclick="applyPreset('轻松幽默的口语风')">轻松幽默的口语风</button>
-                                            <button type="button" class="preset-item" onclick="applyPreset('逻辑严谨的学术风')">逻辑严谨的学术风</button>
-                                            <button type="button" class="preset-item" onclick="applyPreset('中立客观的新闻风')">中立客观的新闻风</button>
-                                            <button type="button" class="preset-item" onclick="applyPreset('节奏鲜明的公众号风')">节奏鲜明的公众号风</button>
-                                            <button type="button" class="preset-item" onclick="applyPreset('文艺抒情的诗意风')">文艺抒情的诗意风</button>
+                                        <textarea id="promptInput"
+                                            placeholder="例如：学术化表达、轻松幽默语气、支持环保政策、批判技术垄断"></textarea>
+                                        <button type="button" class="prompt-dropdown-btn"
+                                            onclick="togglePromptDropdown()" aria-label="选择预设风格">▾</button>
+                                        <div id="presetDropdown" class="preset-dropdown hidden" role="listbox"
+                                            aria-label="预设风格列表">
+                                            <button type="button" class="preset-item"
+                                                onclick="applyPreset('轻松幽默的口语风')">轻松幽默的口语风</button>
+                                            <button type="button" class="preset-item"
+                                                onclick="applyPreset('逻辑严谨的学术风')">逻辑严谨的学术风</button>
+                                            <button type="button" class="preset-item"
+                                                onclick="applyPreset('中立客观的新闻风')">中立客观的新闻风</button>
+                                            <button type="button" class="preset-item"
+                                                onclick="applyPreset('节奏鲜明的公众号风')">节奏鲜明的公众号风</button>
+                                            <button type="button" class="preset-item"
+                                                onclick="applyPreset('文艺抒情的诗意风')">文艺抒情的诗意风</button>
                                         </div>
                                     </div>
                                 </div>
@@ -160,4 +174,5 @@
 
     <script src="/static/app.js"></script>
 </body>
+
 </html>

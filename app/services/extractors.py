@@ -15,7 +15,9 @@ from app.core.exceptions import ContentExtractionError
 
 
 async def extract_text_from_url(url: str) -> str:
-    """Extract main content from URL - 采用更详细的提取逻辑"""
+    """
+    从 URL 提取主要文本内容。
+    """
     try:
         logger.info(f"Starting URL extraction: {url}")
 
@@ -57,7 +59,9 @@ async def extract_text_from_url(url: str) -> str:
 
 
 async def extract_text_from_docx(file: UploadFile) -> str:
-    """Extract text from DOCX file"""
+    """
+    从 DOCX 文件提取文本。
+    """
     try:
         logger.info(f"Starting DOCX extraction: {file.filename}")
         content = await file.read()
@@ -67,7 +71,7 @@ async def extract_text_from_docx(file: UploadFile) -> str:
         for paragraph in doc.paragraphs:
             if paragraph.text.strip():
                 text_parts.append(paragraph.text.strip())
-        
+
         result = "\n".join(text_parts)
         logger.info(f"DOCX extraction complete. Length: {len(result)}")
         return result
@@ -78,7 +82,9 @@ async def extract_text_from_docx(file: UploadFile) -> str:
 
 
 async def extract_text_from_pdf(file: UploadFile) -> str:
-    """Extract text from PDF file"""
+    """
+    从 PDF 文件提取文本。
+    """
     try:
         logger.info(f"Starting PDF extraction: {file.filename}")
         content = await file.read()
@@ -89,7 +95,7 @@ async def extract_text_from_pdf(file: UploadFile) -> str:
             text = page.extract_text()
             if text and text.strip():
                 text_parts.append(text.strip())
-        
+
         result = "\n".join(text_parts)
         logger.info(f"PDF extraction complete. Length: {len(result)}")
         return result

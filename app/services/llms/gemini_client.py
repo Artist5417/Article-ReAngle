@@ -17,7 +17,7 @@ async def get_rewriting_result(
     model: str = "gemini-2.5-flash",
 ):
     """
-    调用Gemini models API洗稿
+    调用 Gemini API 洗稿。
 
     Args:
         instruction: 用户输入的洗稿方式或选择的洗稿风格预设
@@ -25,7 +25,7 @@ async def get_rewriting_result(
         model: 模型选择，默认为gemini-2.5-flash
 
     Returns:
-        GenerateContentResponse对象
+        GenerateContentResponse 对象
     """
     try:
         logger.info(f"Calling Gemini API (model: {model})")

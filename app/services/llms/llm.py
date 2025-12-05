@@ -11,7 +11,9 @@ from app.configs.settings import OPENAI_BASE_URL, DEFAULT_MODEL
 async def call_openai(
     messages: list, model: str = DEFAULT_MODEL, api_key: str | None = None
 ) -> str:
-    """使用OpenAI API"""
+    """
+    使用 OpenAI API (Legacy)
+    """
     # 兼容：优先使用传入的 api_key；若为空，则回退到环境变量
     key_from_env = os.getenv("OPENAI_API_KEY", "").strip()
     key_to_use = (api_key or "").strip() or key_from_env
@@ -96,7 +98,9 @@ async def call_openai(
 
 
 async def rewrite_text(text: str, user_requirement: str, api_key: str = None) -> str:
-    """根据用户要求改写文本"""
+    """
+    根据用户要求改写文本 (Legacy).
+    """
     # 统一"忠实改写器"提示词
     system_prompt = (
         '你是一名"忠实改写器"。\n'

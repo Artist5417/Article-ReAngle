@@ -1,5 +1,6 @@
 """
-项目入口
+项目入口文件。
+配置日志、中间件、跨域、异常处理、静态文件和路由。
 """
 
 import os
@@ -19,7 +20,7 @@ from app.core.exceptions import AppException
 from app.core.handlers import (
     app_exception_handler,
     validation_exception_handler,
-    global_exception_handler
+    global_exception_handler,
 )
 
 
@@ -29,7 +30,7 @@ setup_logging()
 # 创建FastAPI实例
 app = FastAPI(title="Article ReAngle")
 
-# 配置中间件 (注意：FastAPI中间件按后进先出顺序执行)
+# 配置中间件 (FastAPI中间件按后进先出顺序执行)
 # RequestLoggingMiddleware 放在最外层(最后添加)，以便捕获所有请求
 app.add_middleware(RequestLoggingMiddleware)
 
@@ -57,6 +58,9 @@ app.include_router(v1_routers)
 # 主界面端点
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
+    """
+    返回主页 HTML。
+    """
     try:
         index_path = os.path.join(STATIC_DIR, "index.html")
         with open(index_path, "r", encoding="utf-8") as f:
@@ -69,4 +73,8 @@ async def read_root():
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)
+    # 通过 uvicorn 运行应用
+    # 在项目根目录下执行 python -m app.main
+    # 或者在根目录下运行 uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+    # 不要直接运行 main.py，会找不到app包名
+    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)

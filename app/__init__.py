@@ -1,5 +1,3 @@
 """
-Article ReAngle - FastAPI Application
+Article ReAngle - FastAPI 应用程序。
 """
-
-__version__ = "1.5.4401"

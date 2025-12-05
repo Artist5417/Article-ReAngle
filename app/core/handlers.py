@@ -6,23 +6,22 @@ from loguru import logger
 from app.core.exceptions import AppException
 from app.schemas.error_response_schema import BaseErrorResponse
 
+
 async def app_exception_handler(request: Request, exc: AppException):
     """
-    Handle custom application exceptions.
+    处理自定义应用程序异常。
     """
     return JSONResponse(
         status_code=exc.status_code,
         content=BaseErrorResponse(
-            success=False,
-            error=exc.message,
-            code=exc.code,
-            details=exc.details
-        ).model_dump()
+            success=False, error=exc.message, code=exc.code, details=exc.details
+        ).model_dump(),
     )
+
 
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """
-    Handle FastAPI validation exceptions.
+    处理 FastAPI 验证异常。
     """
     return JSONResponse(
         status_code=422,
@@ -30,13 +29,14 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             success=False,
             error="Validation Error",
             code="VALIDATION_ERROR",
-            details={"errors": exc.errors()}
-        ).model_dump()
+            details={"errors": exc.errors()},
+        ).model_dump(),
     )
+
 
 async def global_exception_handler(request: Request, exc: Exception):
     """
-    Handle unhandled exceptions.
+    处理未捕获的全局异常。
     """
     logger.exception("Unhandled exception occurred")
     return JSONResponse(
@@ -45,7 +45,6 @@ async def global_exception_handler(request: Request, exc: Exception):
             success=False,
             error="Internal Server Error",
             code="INTERNAL_ERROR",
-            details={"path": str(request.url)}
-        ).model_dump()
+            details={"path": str(request.url)},
+        ).model_dump(),
     )
-

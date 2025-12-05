@@ -16,9 +16,16 @@ from app.services.llms.llm import call_openai
 miniprogram_router = APIRouter(prefix="/miniprogram")
 
 
-# Helper functions for story parameter processing
 def extract_story_params_from_payload(payload: dict) -> dict:
-    """统一解析请求 JSON 中的字段，支持顶层/keywords/default 三种位置。"""
+    """
+    统一解析请求 JSON 中的字段，支持顶层/keywords/default 三种位置。
+
+    Args:
+        payload (dict): 请求体 JSON 数据
+
+    Returns:
+        dict: 解析后的参数字典
+    """
     default_obj = payload.get("default") or {}
     keywords = payload.get("keywords") or {}
     client = payload.get("client") or {}
@@ -51,7 +58,9 @@ def extract_story_params_from_payload(payload: dict) -> dict:
 
 
 def get_api_key_from_payload(payload: dict) -> str:
-    """Extract API key from payload or environment variable"""
+    """
+    从请求体或环境变量中获取 API Key。
+    """
     provided_json_key = (payload.get("api_key") or "").strip()
     env_key = os.getenv("OPENAI_API_KEY", "").strip()
     return provided_json_key or env_key
@@ -65,7 +74,9 @@ def build_story_output_body(
     theme: str | None,
     client: dict,
 ) -> dict:
-    """Build standardized story output response"""
+    """
+    构建标准化的故事输出响应。
+    """
     return {
         "success": True,
         "rewritten_text": story_obj.get("rewritten_text", ""),
@@ -88,7 +99,9 @@ async def generate_story(
     langs: Optional[str],
     api_key: Optional[str],
 ) -> dict:
-    """调用 LLM 生成睡前故事，并尽量返回结构化信息。"""
+    """
+    调用 LLM 生成睡前故事，并尽量返回结构化信息。
+    """
     material = (
         keywords.get("material")
         or keywords.get("内容")
@@ -158,7 +171,9 @@ async def generate_story(
 
 
 def write_result_file(job_id: str, data: dict) -> None:
-    """Write result data to file"""
+    """
+    将结果写入文件系统。
+    """
     path = os.path.join(RESULTS_DIR, f"{job_id}.json")
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
@@ -166,6 +181,9 @@ def write_result_file(job_id: str, data: dict) -> None:
 
 @miniprogram_router.get("/health")
 async def health():
+    """
+    健康检查接口。
+    """
     import time
 
     return {
@@ -178,7 +196,9 @@ async def health():
 # Story generation endpoints
 @miniprogram_router.get("/generate")
 async def generate_sample():
-    """返回一个空模板，便于前端对齐字段名称与结构。"""
+    """
+    返回一个空模板，便于前端对齐字段名称与结构。
+    """
     return {
         "default": {
             "title": "",
@@ -194,7 +214,8 @@ async def generate_sample():
 @miniprogram_router.post("/generate")
 async def generate_story_post(request: Request):
     """
-    Generate bedtime story based on JSON request
+    生成睡前故事接口。
+
     Returns:
       - 若写盘成功：{ success, jobId, resultUrl }
       - 若无法写盘：{ success, rewritten_text, title, length, age, theme, client }
@@ -274,7 +295,8 @@ async def generate_story_post(request: Request):
 @miniprogram_router.get("/results/{job_id}.json")
 async def get_result(job_id: str):
     """
-    Retrieve a previously generated result by job ID
+    通过 Job ID 获取之前生成的结果。
+    Retrieve a previously generated result by job ID.
     """
     path = os.path.join(RESULTS_DIR, f"{job_id}.json")
 

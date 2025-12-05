@@ -1,3 +1,8 @@
+/**
+ * Article ReAngle - 前端逻辑
+ * 处理用户交互、文件上传、API调用和结果渲染。
+ */
+
 // 全局变量
 let currentResult = null;
 
@@ -7,6 +12,10 @@ document.addEventListener('DOMContentLoaded', function () {
     initializeApp();
 });
 
+/**
+ * 初始化应用
+ * 检查必要DOM元素并绑定事件监听器
+ */
 function initializeApp() {
     console.log('开始初始化应用');
 
@@ -54,22 +63,32 @@ function initializeApp() {
     console.log('初始化完成');
 }
 
-// 预设风格选择器：展开/收起
+/**
+ * 切换预设风格列表的显示状态
+ */
 function togglePresetList() {
     const list = document.getElementById('presetList');
     if (!list) return;
     list.classList.toggle('hidden');
 }
 
-// 打开下拉：在输入框聚焦时
-// 箭头按钮点击：展开/收起
+
+/**
+ * 切换提示词下拉菜单的显示状态
+ * 打开下拉：在输入框聚焦时
+ * 箭头按钮点击：展开/收起
+ */
 function togglePromptDropdown() {
     const dd = document.getElementById('presetDropdown');
     if (!dd) return;
     dd.classList.toggle('hidden');
 }
 
-// 应用预设到 promptInput
+/**
+ * 应用预设风格到输入框
+ * @param {string} text - 预设风格文本
+ * 应用预设到 promptInput
+ */
 function applyPreset(text) {
     const promptInput = document.getElementById('promptInput');
     if (!promptInput) return;
@@ -104,7 +123,10 @@ document.addEventListener('click', function (e) {
     }
 });
 
-// 切换输入标签页
+/**
+ * 切换输入面板标签页
+ * @param {string} tabName - 标签名称 (text/file/url/youtube)
+ */
 function switchTab(tabName) {
     // 隐藏所有面板
     document.querySelectorAll('.input-panel').forEach(panel => {
@@ -123,7 +145,10 @@ function switchTab(tabName) {
     event.target.classList.add('active');
 }
 
-// 切换结果标签页
+/**
+ * 切换结果展示标签页
+ * @param {string} tabName - 标签名称 (rewritten/compare/summary)
+ */
 function switchResultTab(tabName) {
     // 隐藏所有结果面板
     document.querySelectorAll('.result-panel').forEach(panel => {
@@ -142,7 +167,10 @@ function switchResultTab(tabName) {
     event.target.classList.add('active');
 }
 
-// 处理文章
+/**
+ * 处理文章改写请求
+ * 收集输入数据，发送API请求，并处理响应
+ */
 async function processArticle() {
     const processBtn = document.getElementById('processBtn');
     const loading = document.getElementById('loading');
@@ -226,7 +254,10 @@ async function processArticle() {
     }
 }
 
-// 获取输入数据（仅按当前激活的输入页签判断）
+/**
+ * 获取当前激活面板的输入数据
+ * @returns {Object|null} 包含 type 和 content 的对象，若无效则返回 null
+ */
 function getInputData() {
     console.log('开始检查输入数据（基于当前激活页签）...');
 
@@ -277,7 +308,10 @@ function getInputData() {
     return null;
 }
 
-// 显示处理中状态
+/**
+ * 显示处理中加载状态
+ * 更新结果区域的 UI 以显示加载动画
+ */
 function showProcessingState() {
     const resultSection = document.getElementById('result-section');
     const rewrittenContent = document.getElementById('rewrittenContent');
@@ -304,7 +338,10 @@ function showProcessingState() {
     resultSection.scrollIntoView({ behavior: 'smooth' });
 }
 
-// 显示错误状态
+/**
+ * 显示错误状态
+ * @param {string} errorMessage - 错误信息
+ */
 function showErrorState(errorMessage) {
     const resultSection = document.getElementById('result-section');
     const rewrittenContent = document.getElementById('rewrittenContent');
@@ -342,7 +379,10 @@ function showErrorState(errorMessage) {
 let currentOriginalText = '';
 let currentRewrittenText = '';
 
-// 显示结果
+/**
+ * 展示后端返回的结果
+ * @param {Object} result - 后端返回的数据对象
+ */
 function displayResults(result) {
     const resultSection = document.getElementById('result-section');
     const originalContent = document.getElementById('originalContent');
@@ -382,7 +422,11 @@ function displayResults(result) {
     resultSection.scrollIntoView({ behavior: 'smooth' });
 }
 
-// 智能段落分割 - 基于语义和内容结构
+/**
+ * 将文本分割为段落
+ * @param {string} text - 输入文本
+ * @returns {Array<string>} 段落数组
+ */
 function splitIntoParagraphs(text) {
     if (!text) return [];
 
@@ -403,7 +447,12 @@ function splitIntoParagraphs(text) {
     return paragraphs.map(p => p.trim()).filter(p => p.length > 0);
 }
 
-// 智能段落分割算法
+/**
+ * 智能段落分割算法
+ * 基于标点和长度进行分割
+ * @param {string} text - 输入文本
+ * @returns {Array<string>} 段落数组
+ */
 function intelligentParagraphSplit(text) {
     const paragraphs = [];
     const sentences = text.split(/([。！？；])/);
@@ -504,7 +553,12 @@ function splitLongParagraph(text) {
     return subParagraphs;
 }
 
-// 渲染段落对比视图 - 改进的段落对齐算法
+/**
+ * 渲染对齐的段落对比视图
+ * @param {string} originalText - 原文
+ * @param {string} rewrittenText - 改写文
+ * @returns {string} 构建的 HTML 字符串
+ */
 function renderAlignedParagraphs(originalText, rewrittenText) {
     const originalParagraphs = splitIntoParagraphs(originalText);
     const rewrittenParagraphs = splitIntoParagraphs(rewrittenText);
@@ -585,7 +639,12 @@ function calculateParagraphHeight(text) {
     return Math.max(1, estimatedLines);
 }
 
-// 高亮段落内的变化
+/**
+ * 高亮显示段落内的文本变化
+ * @param {string} originalPara - 原文段落
+ * @param {string} rewrittenPara - 改写段落
+ * @returns {string} 包含高亮标签的 HTML
+ */
 function highlightParagraphChanges(originalPara, rewrittenPara) {
     if (!originalPara || !rewrittenPara) {
         return escapeHtml(rewrittenPara);
@@ -780,7 +839,11 @@ function adjustSeparatorAlignment() {
     }
 }
 
-// 渲染带分割线的原文
+/**
+ * 渲染带有分割线的原文
+ * @param {string} originalText - 原文
+ * @returns {string} 构建的 HTML 字符串
+ */
 function renderOriginalWithSeparators(originalText) {
     const paragraphs = splitIntoParagraphs(originalText);
     let html = '<div class="paragraphs-with-separators">';

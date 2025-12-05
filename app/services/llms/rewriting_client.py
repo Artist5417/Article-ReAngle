@@ -14,15 +14,13 @@ async def get_rewriting_result(
     source: str,
 ) -> str:
     """
-    根据用户选择模型调用对应client，并处理response结果
-
+    根据用户选择模型调用对应client，并处理response结果。
     Args:
         llm_type: 模型选择
         instruction: 用户输入的洗稿方式或选择的洗稿风格预设
         source: 原始文章
-
     Returns:
-        从response中提取洗稿结果文本
+        str: 从response中提取的洗稿结果文本
     """
     try:
         # 获取模型名称

@@ -17,7 +17,7 @@ async def get_rewriting_result(
     model: str = "qwen-flash",
 ):
     """
-    调用OpenAI Completions API洗稿
+    调用 OpenAI Completions API (Qwen) 洗稿。
 
     Args:
         instruction: 用户输入的洗稿方式或选择的洗稿风格预设
@@ -25,7 +25,7 @@ async def get_rewriting_result(
         model: 模型选择，默认为qwen-flash
 
     Returns:
-        OpenAI Completion对象
+        OpenAI Completion 对象
     """
     try:
         logger.info(f"Calling Qwen API (model: {model})")

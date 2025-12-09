@@ -99,6 +99,23 @@ h2 {
     border-color: #667eea;
 }
 
+/* 面板操作区与添加按钮 */
+.panel-actions {
+    margin-top: 10px;
+}
+.add-btn {
+    padding: 8px 12px;
+    background: #667eea;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.add-btn:hover {
+    background: #5468e0;
+}
+
 /* 输入面板 */
 .input-panel {
     display: none;
@@ -410,6 +427,100 @@ input[type="range"]::-moz-range-thumb {
     opacity: 0.6;
     cursor: not-allowed;
     transform: none;
+}
+
+/* 已添加输入（放在输入面板下方，整行显示） */
+.added-queue {
+    width: 100%;
+    margin-top: 12px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px;
+}
+.queue-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+.queue-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #4a5568;
+}
+.queue-clear-btn {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+}
+.queue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 420px;
+    overflow: auto;
+}
+.queue-empty {
+    color: #718096;
+    font-size: 14px;
+    padding: 8px 0;
+}
+.queue-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px;
+    background: #fff;
+}
+.queue-item .qi-icon {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: #f4f6ff;
+    color: #667eea;
+    font-weight: 700;
+    font-size: 14px;
+    flex: 0 0 28px;
+}
+.queue-item .qi-body {
+    flex: 1;
+    min-width: 0;
+}
+.qi-title {
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.qi-meta {
+    color: #718096;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.queue-item .qi-del {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    color: #718096;
+    padding: 2px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    flex: 0 0 auto;
+}
+.queue-item .qi-del:hover {
+    color: #ef4444;
+    border-color: #f3c7c7;
+    background: #fff5f5;
 }
 
 /* 加载动画 */

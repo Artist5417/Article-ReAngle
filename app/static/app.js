@@ -8,6 +8,11 @@ let currentResult = null;
 
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function () {
+    try {
+        // 显式打印前端脚本版本，便于定位缓存问题
+        const APP_JS_VERSION = '2025-12-09a';
+        console.log('[app.js] loaded, version =', APP_JS_VERSION);
+    } catch (_) {}
     console.log('DOM加载完成');
     initializeApp();
 });
@@ -360,23 +365,8 @@ function addCurrentInput() {
     }
     inputItems.push(item);
     renderAddedList();
-    // 清空当前激活面板内的输入控件
-    clearActivePanelInputs();
-    // 兜底：直接按固定 ID 清空（避免某些情况下未获取到激活面板）
-    try {
-        const textEl = document.getElementById('inputText');
-        if (textEl) { textEl.value = ''; }
-        const urlEl = document.getElementById('urlInput');
-        if (urlEl) { urlEl.value = ''; }
-        const ytEl = document.getElementById('youtubeInput');
-        if (ytEl) { ytEl.value = ''; }
-        const fileEl = document.getElementById('fileInput');
-        if (fileEl) { fileEl.value = ''; }
-        const selected = document.getElementById('selected-file');
-        if (selected) { selected.style.display = 'none'; selected.classList.add('hidden'); }
-        const fileName = document.getElementById('fileName');
-        if (fileName) fileName.textContent = '';
-    } catch (_) { /* no-op */ }
+    // 根据本次输入类型清空对应控件
+    clearInputsByType(data.type);
 }
 
 function removeInputItem(id) {
@@ -417,49 +407,48 @@ function renderAddedList() {
     }).join('');
 }
 
-// 清空当前激活面板内的控件
+/**
+ * 清空当前激活面板内指定类型的输入控件。
+ * 优先在 .input-panel.active 作用域内查找，找不到再回退到全局 ID。
+ */
+function clearInputsByType(inputType) {
+    const active = document.querySelector('.input-panel.active');
+    if (inputType === 'text') {
+        const el = (active && active.querySelector('textarea')) || document.getElementById('inputText');
+        if (el) { el.value = ''; }
+        return;
+    }
+    if (inputType === 'url') {
+        const el = (active && active.querySelector('input[type="url"], input[type="text"]')) || document.getElementById('urlInput');
+        if (el) { el.value = ''; }
+        return;
+    }
+    if (inputType === 'youtube') {
+        const el = (active && active.querySelector('input[type="url"], input[type="text"]')) || document.getElementById('youtubeInput');
+        if (el) { el.value = ''; }
+        return;
+    }
+    if (inputType === 'file') {
+        const fileEl = (active && active.querySelector('input[type="file"]')) || document.getElementById('fileInput');
+        if (fileEl) { fileEl.value = ''; }
+        const selected = (active && (active.querySelector('#selected-file, .selected-file'))) || document.getElementById('selected-file');
+        if (selected) { selected.style.display = 'none'; selected.classList.add('hidden'); }
+        const fileName = (active && active.querySelector('#fileName')) || document.getElementById('fileName');
+        if (fileName) { fileName.textContent = ''; }
+    }
+}
+
+// 兼容保留：清空当前激活面板输入（委托给 clearInputsByType）
 function clearActivePanelInputs() {
     const active = document.querySelector('.input-panel.active');
     if (!active) return;
     const pid = active.id || '';
-    if (pid.startsWith('text-')) {
-        const el = document.getElementById('inputText') || active.querySelector('textarea');
-        if (el) {
-            el.value = '';
-            try { el.dispatchEvent(new Event('input')); } catch (_) {}
-            try { el.dispatchEvent(new Event('change')); } catch (_) {}
-        }
-        return;
-    }
-    if (pid.startsWith('url-')) {
-        const el = document.getElementById('urlInput') || active.querySelector('input[type="url"], input[type="text"]');
-        if (el) {
-            el.value = '';
-            try { el.dispatchEvent(new Event('input')); } catch (_) {}
-            try { el.dispatchEvent(new Event('change')); } catch (_) {}
-        }
-        return;
-    }
-    if (pid.startsWith('youtube-')) {
-        const el = document.getElementById('youtubeInput') || active.querySelector('input[type="url"], input[type="text"]');
-        if (el) {
-            el.value = '';
-            try { el.dispatchEvent(new Event('input')); } catch (_) {}
-            try { el.dispatchEvent(new Event('change')); } catch (_) {}
-        }
-        return;
-    }
-    if (pid.startsWith('file-')) {
-        const fileEl = document.getElementById('fileInput') || active.querySelector('input[type="file"]');
-        if (fileEl) {
-            fileEl.value = '';
-            try { fileEl.dispatchEvent(new Event('change')); } catch (_) {}
-        }
-        const selected = document.getElementById('selected-file');
-        if (selected) { selected.style.display = 'none'; selected.classList.add('hidden'); }
-        const fileName = document.getElementById('fileName');
-        if (fileName) fileName.textContent = '';
-    }
+    let inputType = '';
+    if (pid.startsWith('text-')) inputType = 'text';
+    else if (pid.startsWith('url-')) inputType = 'url';
+    else if (pid.startsWith('youtube-')) inputType = 'youtube';
+    else if (pid.startsWith('file-')) inputType = 'file';
+    if (inputType) clearInputsByType(inputType);
 }
 
 /**

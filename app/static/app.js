@@ -176,11 +176,16 @@ async function processArticle() {
     const loading = document.getElementById('loading');
     const resultSection = document.getElementById('result-section');
 
-    // 获取输入数据（仅基于当前激活的输入页签）
-    const inputData = getInputData();
-    if (!inputData) {
-        alert('请提供要处理的文章内容！');
-        return;
+    // 若队列非空，走多源模式；否则读取当前激活面板（旧单源）
+    const useMulti = Array.isArray(inputItems) && inputItems.length > 0;
+
+    let inputData = null;
+    if (!useMulti) {
+        inputData = getInputData();
+        if (!inputData) {
+            alert('请提供要处理的文章内容！');
+            return;
+        }
     }
 
     // 获取改写要求
@@ -199,36 +204,43 @@ async function processArticle() {
     showProcessingState();
 
     try {
-        // 构建FormData
-        const formData = new FormData();
+        let response;
+        if (useMulti) {
+            const formData = new FormData();
+            const inputsPayload = inputItems.map(it => {
+                if (it.type === 'file') {
+                    const key = `file_${it.id}`;
+                    formData.append(key, it._file);
+                    return { id: it.id, type: it.type, contentKey: key, meta: { filename: it.meta?.filename, size: it._file?.size } };
+                }
+                return { id: it.id, type: it.type, content: it.payload };
+            });
+            formData.append('inputs', JSON.stringify(inputsPayload));
+            // 多源模式标识，配合后端枚举校验
+            formData.append('input_type', 'multi');
+            formData.append('prompt', promptInput);
+            formData.append('llm_type', selectedModel);
+            response = await fetch('/api/v1/rewrite', { method: 'POST', body: formData });
+        } else {
+            // 构建FormData（单源）
+            const formData = new FormData();
+            console.log('输入数据类型:', inputData.type);
+            console.log('输入数据内容:', inputData.content);
 
-        console.log('输入数据类型:', inputData.type);
-        console.log('输入数据内容:', inputData.content);
-
-        if (inputData.type === 'text') {
-            formData.append('input_text', inputData.content);
-            console.log('添加文本数据到FormData');
-        } else if (inputData.type === 'file') {
-            formData.append('file', inputData.content);
-            console.log('添加文件数据到FormData');
-        } else if (inputData.type === 'url') {
-            formData.append('url', inputData.content);
-            console.log('添加URL数据到FormData:', inputData.content);
-        } else if (inputData.type === 'youtube') {
-            formData.append('youtube_url', inputData.content);
-            console.log('添加YouTube链接到FormData:', inputData.content);
+            if (inputData.type === 'text') {
+                formData.append('input_text', inputData.content);
+            } else if (inputData.type === 'file') {
+                formData.append('file', inputData.content);
+            } else if (inputData.type === 'url') {
+                formData.append('url', inputData.content);
+            } else if (inputData.type === 'youtube') {
+                formData.append('youtube_url', inputData.content);
+            }
+            formData.append('input_type', inputData.type);
+            formData.append('prompt', promptInput);
+            formData.append('llm_type', selectedModel);
+            response = await fetch('/api/v1/rewrite', { method: 'POST', body: formData });
         }
-
-        // 明确告知后端输入来源类型
-        formData.append('input_type', inputData.type);
-
-        formData.append('prompt', promptInput);
-        formData.append('llm_type', selectedModel);
-
-        const response = await fetch('/api/v1/rewrite', {
-            method: 'POST',
-            body: formData
-        });
 
         // 检查响应状态
         if (!response.ok) {
@@ -306,6 +318,148 @@ function getInputData() {
 
     console.log('无法识别的输入类型，或当前面板无内容');
     return null;
+}
+
+// ================= 多源输入篮（前端收集，UI 展示） =================
+let inputItems = [];
+
+function addCurrentInput() {
+    const data = getInputData();
+    if (!data) {
+        alert('请输入内容后再添加');
+        return;
+    }
+    const id = `it_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const item = { id, type: data.type, meta: { createdAt: Date.now() } };
+    if (data.type === 'file') {
+        const f = data.content;
+        item._file = f;
+        item.meta.filename = f.name || '未命名文件';
+        item.meta.title = `文件 · ${item.meta.filename}`;
+    } else if (data.type === 'text') {
+        const value = (data.content || '').toString();
+        item.payload = value;
+        item.meta.title = `文本 · ${value.slice(0, 30)}`;
+        item.meta.meta = `${value.length} 字`;
+    } else if (data.type === 'url') {
+        const url = (data.content || '').toString();
+        item.payload = url;
+        try {
+            const u = new URL(url);
+            item.meta.title = `链接 · ${u.hostname}`;
+            item.meta.meta = url;
+        } catch (_) {
+            item.meta.title = `链接 · ${url.slice(0, 30)}`;
+            item.meta.meta = url;
+        }
+    } else if (data.type === 'youtube') {
+        const yt = (data.content || '').toString();
+        item.payload = yt;
+        item.meta.title = `YouTube · ${yt.slice(0, 16)}`;
+        item.meta.meta = yt;
+    }
+    inputItems.push(item);
+    renderAddedList();
+    // 清空当前激活面板内的输入控件
+    clearActivePanelInputs();
+    // 兜底：直接按固定 ID 清空（避免某些情况下未获取到激活面板）
+    try {
+        const textEl = document.getElementById('inputText');
+        if (textEl) { textEl.value = ''; }
+        const urlEl = document.getElementById('urlInput');
+        if (urlEl) { urlEl.value = ''; }
+        const ytEl = document.getElementById('youtubeInput');
+        if (ytEl) { ytEl.value = ''; }
+        const fileEl = document.getElementById('fileInput');
+        if (fileEl) { fileEl.value = ''; }
+        const selected = document.getElementById('selected-file');
+        if (selected) { selected.style.display = 'none'; selected.classList.add('hidden'); }
+        const fileName = document.getElementById('fileName');
+        if (fileName) fileName.textContent = '';
+    } catch (_) { /* no-op */ }
+}
+
+function removeInputItem(id) {
+    inputItems = inputItems.filter(it => it.id !== id);
+    renderAddedList();
+}
+
+function clearAllInputs() {
+    inputItems = [];
+    renderAddedList();
+}
+
+function renderAddedList() {
+    const list = document.getElementById('addedList');
+    if (!list) return;
+    if (!inputItems.length) {
+        list.innerHTML = '<div class="queue-empty">还没有添加内容，点击上方“添加到输入篮”</div>';
+        return;
+    }
+    const iconOf = (type) => {
+        if (type === 'text') return 'T';
+        if (type === 'file') return 'F';
+        if (type === 'url') return 'U';
+        if (type === 'youtube') return 'Y';
+        return '?';
+    };
+    list.innerHTML = inputItems.map(it => {
+        const title = it.meta?.title || `${it.type}`;
+        const meta = it.meta?.meta || (it.meta?.filename || '');
+        return `<div class="queue-item" title="${(meta || '').replace(/"/g,'&quot;')}">
+            <div class="qi-icon">${iconOf(it.type)}</div>
+            <div class="qi-body">
+                <div class="qi-title">${escapeHtml(title)}</div>
+                <div class="qi-meta">${escapeHtml(meta || '')}</div>
+            </div>
+            <button class="qi-del" onclick="removeInputItem('${it.id}')">删除</button>
+        </div>`;
+    }).join('');
+}
+
+// 清空当前激活面板内的控件
+function clearActivePanelInputs() {
+    const active = document.querySelector('.input-panel.active');
+    if (!active) return;
+    const pid = active.id || '';
+    if (pid.startsWith('text-')) {
+        const el = document.getElementById('inputText') || active.querySelector('textarea');
+        if (el) {
+            el.value = '';
+            try { el.dispatchEvent(new Event('input')); } catch (_) {}
+            try { el.dispatchEvent(new Event('change')); } catch (_) {}
+        }
+        return;
+    }
+    if (pid.startsWith('url-')) {
+        const el = document.getElementById('urlInput') || active.querySelector('input[type="url"], input[type="text"]');
+        if (el) {
+            el.value = '';
+            try { el.dispatchEvent(new Event('input')); } catch (_) {}
+            try { el.dispatchEvent(new Event('change')); } catch (_) {}
+        }
+        return;
+    }
+    if (pid.startsWith('youtube-')) {
+        const el = document.getElementById('youtubeInput') || active.querySelector('input[type="url"], input[type="text"]');
+        if (el) {
+            el.value = '';
+            try { el.dispatchEvent(new Event('input')); } catch (_) {}
+            try { el.dispatchEvent(new Event('change')); } catch (_) {}
+        }
+        return;
+    }
+    if (pid.startsWith('file-')) {
+        const fileEl = document.getElementById('fileInput') || active.querySelector('input[type="file"]');
+        if (fileEl) {
+            fileEl.value = '';
+            try { fileEl.dispatchEvent(new Event('change')); } catch (_) {}
+        }
+        const selected = document.getElementById('selected-file');
+        if (selected) { selected.style.display = 'none'; selected.classList.add('hidden'); }
+        const fileName = document.getElementById('fileName');
+        if (fileName) fileName.textContent = '';
+    }
 }
 
 /**

@@ -66,6 +66,24 @@
                                     style="width:100%;padding:15px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;">
                             </div>
                         </div>
+
+                        <!-- 添加到输入篮按钮（统一放在面板下方） -->
+                        <div class="panel-actions">
+                            <button type="button" class="add-btn" onclick="addCurrentInput()">添加到输入篮</button>
+                        </div>
+
+                        <!-- 已添加输入：移动到面板下方整行显示 -->
+                        <section class="added-queue" aria-label="已添加输入列表">
+                            <div class="queue-header">
+                                <h3>已添加输入</h3>
+                                <div class="queue-actions">
+                                    <button type="button" class="queue-clear-btn" onclick="clearAllInputs()">清空</button>
+                                </div>
+                            </div>
+                            <div id="addedList" class="queue-list">
+                                <div class="queue-empty">还没有添加内容，点击上方“添加到输入篮”</div>
+                            </div>
+                        </section>
                     </section>
 
                     <!-- 洗稿设置 -->

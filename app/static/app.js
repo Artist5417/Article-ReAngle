@@ -181,16 +181,12 @@ async function processArticle() {
     const loading = document.getElementById('loading');
     const resultSection = document.getElementById('result-section');
 
-    // 若队列非空，走多源模式；否则读取当前激活面板（旧单源）
+    // 支持多源模式：必须先把内容添加到输入篮
     const useMulti = Array.isArray(inputItems) && inputItems.length > 0;
 
-    let inputData = null;
     if (!useMulti) {
-        inputData = getInputData();
-        if (!inputData) {
-            alert('请提供要处理的文章内容！');
-            return;
-        }
+        alert('请先将内容“添加到输入篮”后再开始洗稿');
+        return;
     }
 
     // 获取改写要求
@@ -210,7 +206,7 @@ async function processArticle() {
 
     try {
         let response;
-        if (useMulti) {
+        {
             const formData = new FormData();
             const inputsPayload = inputItems.map(it => {
                 if (it.type === 'file') {
@@ -221,27 +217,6 @@ async function processArticle() {
                 return { id: it.id, type: it.type, content: it.payload };
             });
             formData.append('inputs', JSON.stringify(inputsPayload));
-            // 多源模式标识，配合后端枚举校验
-            formData.append('input_type', 'multi');
-            formData.append('prompt', promptInput);
-            formData.append('llm_type', selectedModel);
-            response = await fetch('/api/v1/rewrite', { method: 'POST', body: formData });
-        } else {
-            // 构建FormData（单源）
-            const formData = new FormData();
-            console.log('输入数据类型:', inputData.type);
-            console.log('输入数据内容:', inputData.content);
-
-            if (inputData.type === 'text') {
-                formData.append('input_text', inputData.content);
-            } else if (inputData.type === 'file') {
-                formData.append('file', inputData.content);
-            } else if (inputData.type === 'url') {
-                formData.append('url', inputData.content);
-            } else if (inputData.type === 'youtube') {
-                formData.append('youtube_url', inputData.content);
-            }
-            formData.append('input_type', inputData.type);
             formData.append('prompt', promptInput);
             formData.append('llm_type', selectedModel);
             response = await fetch('/api/v1/rewrite', { method: 'POST', body: formData });

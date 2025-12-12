@@ -1199,7 +1199,7 @@ async function getTTSResult(source) {
     if (source === 'summary') {
         const el = document.getElementById('summaryContent');
         text = el ? el.textContent : '';
-        header = document.querySelector('#summary-section-inner .result-header');
+        header = document.querySelector('#summary-panel .result-header');
     } else if (source === 'rewritten') {
         // 优先取全局变量
         text = typeof currentRewrittenText !== 'undefined' ? currentRewrittenText : (document.getElementById('rewrittenContent')?.textContent || '');
@@ -1219,7 +1219,7 @@ async function getTTSResult(source) {
 
     // 显式捕获 button 元素，防止 async/await 后 event 丢失
     const btn = (event && event.target) ? event.target : null;
-    const originalBtnText = btn ? btn.innerText : '🔊 朗读';
+    const originalBtnText = btn ? btn.innerText : '朗读';
 
     if (btn) {
         btn.innerText = '⏳ 请求中...';

@@ -14,7 +14,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>📝 Article ReAngle</h1>
+            <h1>Article ReAngle</h1>
             <p>智能洗稿程序 - 保留核心信息，改变表达方式</p>
         </header>
 
@@ -42,7 +42,7 @@
                             <div class="file-upload">
                                 <input type="file" id="fileInput" accept=".txt,.docx,.pdf,image/*">
                                 <label for="fileInput" class="file-label">
-                                    <span>📁 选择文件</span>
+                                    <span>选择文件</span>
                                     <small>支持 TXT、Word、PDF、JPG、PNG 格式</small>
                                 </label>
                                 <div id="selected-file" class="selected-file hidden">
@@ -93,8 +93,7 @@
                                 <div class="control-group half-width">
                                     <label for="promptInput">请输入洗稿要求：</label>
                                     <div class="prompt-wrapper" id="promptWrapper">
-                                        <textarea id="promptInput"
-                                            placeholder="例如：学术化表达、轻松幽默语气、支持环保政策、批判技术垄断"></textarea>
+                                        <textarea id="promptInput" placeholder="例如：学术化表达、轻松幽默语气等"></textarea>
                                         <button type="button" class="prompt-dropdown-btn"
                                             onclick="togglePromptDropdown()" aria-label="选择预设风格">▾</button>
                                         <div id="presetDropdown" class="preset-dropdown hidden" role="listbox"
@@ -126,7 +125,7 @@
 
                     <!-- 处理按钮 -->
                     <section class="action-section">
-                        <button id="processBtn" onclick="processArticle()">🚀 开始洗稿</button>
+                        <button id="processBtn" onclick="processArticle()">开始洗稿</button>
                         <div id="loading" class="loading hidden">
                             <div class="spinner"></div>
                             <span>正在处理中，请稍候...</span>
@@ -148,15 +147,13 @@
                         <!-- 概要面板 -->
                         <div id="summary-panel" class="result-panel active">
                             <div class="result-content">
-                                <div id="summary-section-inner" class="summary-section">
-                                    <div class="result-header">
-                                        <h3>概要</h3>
-                                        <div class="result-actions">
-                                            <button onclick="getTTSResult('summary')">🔊 朗读</button>
-                                        </div>
+                                <div class="result-header">
+                                    <h3>概要</h3>
+                                    <div class="result-actions">
+                                        <button onclick="getTTSResult('summary')">朗读</button>
                                     </div>
-                                    <div id="summaryContent" class="content-display summary-box"></div>
                                 </div>
+                                <div id="summaryContent" class="content-display"></div>
                             </div>
                         </div>
 
@@ -166,10 +163,10 @@
                                 <div class="result-header">
                                     <h3>正文</h3>
                                     <div class="result-actions">
-                                        <button onclick="getTTSResult('rewritten')">🔊 朗读</button>
-                                        <button onclick="copyText('rewritten')">📋 复制</button>
-                                        <button onclick="downloadText('rewritten', 'txt')">💾 下载TXT</button>
-                                        <button onclick="downloadText('rewritten', 'md')">📄 下载Markdown</button>
+                                        <button onclick="getTTSResult('rewritten')">朗读</button>
+                                        <button onclick="copyText('rewritten')">复制</button>
+                                        <button onclick="downloadText('rewritten', 'txt')">下载TXT</button>
+                                        <button onclick="downloadText('rewritten', 'md')">下载Markdown</button>
                                     </div>
                                 </div>
                                 <div id="rewrittenContent" class="content-display"></div>
@@ -197,8 +194,8 @@
                         <div id="digital-human-panel" class="result-panel">
                             <div class="result-content">
                                 <div class="coming-soon-placeholder">
-                                    <h3>🤖 数字人互动</h3>
-                                    <p>Coming Soon... 功能开发中</p>
+                                    <h3>数字人互动</h3>
+                                    <p>功能开发中</p>
                                 </div>
                             </div>
                         </div>

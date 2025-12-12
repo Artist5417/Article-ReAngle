@@ -9,6 +9,7 @@ from loguru import logger
 
 from app.configs.settings import SYSTEM_PROMPTS_DIR
 from app.core.exceptions import LLMProviderError
+from app.schemas.rewrite_schema import LLMResponse
 
 
 async def get_rewriting_result(
@@ -52,8 +53,10 @@ async def get_rewriting_result(
 
         # 通过Responses创建任务，获取response对象
         logger.debug("Sending request to OpenAI...")
-        response = client.responses.create(
+
+        response = client.responses.parse(
             model=model,
+            text_format=LLMResponse,
             input=[
                 {
                     # system prompt
@@ -73,7 +76,8 @@ async def get_rewriting_result(
             ],
         )
         logger.info("OpenAI API request successful")
-        return response
+
+        return response.output_parsed
 
     except Exception as e:
         logger.exception("OpenAI API call failed")

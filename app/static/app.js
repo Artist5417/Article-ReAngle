@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // 显式打印前端脚本版本，便于定位缓存问题
         const APP_JS_VERSION = '2025-12-09a';
         console.log('[app.js] loaded, version =', APP_JS_VERSION);
-    } catch (_) {}
+    } catch (_) { }
     console.log('DOM加载完成');
     initializeApp();
 });
@@ -371,7 +371,7 @@ function renderAddedList() {
     list.innerHTML = inputItems.map(it => {
         const title = it.meta?.title || `${it.type}`;
         const meta = it.meta?.meta || (it.meta?.filename || '');
-        return `<div class="queue-item" title="${(meta || '').replace(/"/g,'&quot;')}">
+        return `<div class="queue-item" title="${(meta || '').replace(/"/g, '&quot;')}">
             <div class="qi-icon">${iconOf(it.type)}</div>
             <div class="qi-body">
                 <div class="qi-title">${escapeHtml(title)}</div>
@@ -441,15 +441,15 @@ function showProcessingState() {
 
     // 显示处理中状态
     if (rewrittenContent) {
-        rewrittenContent.innerHTML = '<div class="processing-state"><div class="spinner"></div><p>正在处理中，请稍候...</p></div>';
+        rewrittenContent.innerHTML = '<div class="processing-state"><div class="spinner"></div><p>正在处理中...</p></div>';
     }
 
     if (originalContent) {
-        originalContent.innerHTML = '<div class="processing-state"><div class="spinner"></div><p>正在处理中，请稍候...</p></div>';
+        originalContent.innerHTML = '<div class="processing-state"><div class="spinner"></div><p>正在处理中...</p></div>';
     }
 
     if (summaryContent) {
-        summaryContent.innerHTML = '<div class="processing-state"><div class="spinner"></div><p>正在处理中，请稍候...</p></div>';
+        summaryContent.innerHTML = '<div class="processing-state"><div class="spinner"></div><p>正在处理中...</p></div>';
     }
 
     // 滚动到结果区域
@@ -474,7 +474,6 @@ function showErrorState(errorMessage) {
         <div class="error-icon">❌</div>
         <h3>处理失败</h3>
         <p>${errorMessage}</p>
-        <p class="error-hint">请检查网络连接或API Key设置，然后重试。</p>
     </div>`;
 
     if (rewrittenContent) {
@@ -1187,3 +1186,106 @@ function downloadText(type) {
     URL.revokeObjectURL(url);
 }
 
+
+/**
+ * 此时添加 getTTSResult 函数
+ * 调用后端 TTS 接口
+ * @param {string} source - 文本来源 'summary' 或 'rewritten'
+ */
+async function getTTSResult(source) {
+    let text = '';
+    let header = null;
+
+    if (source === 'summary') {
+        const el = document.getElementById('summaryContent');
+        text = el ? el.textContent : '';
+        header = document.querySelector('#summary-section-inner .result-header');
+    } else if (source === 'rewritten') {
+        // 优先取全局变量
+        text = typeof currentRewrittenText !== 'undefined' ? currentRewrittenText : (document.getElementById('rewrittenContent')?.textContent || '');
+        header = document.querySelector('#rewritten-panel .result-header');
+    }
+
+    text = text.trim();
+    if (!text) {
+        alert('没有可朗读的文本内容');
+        return;
+    }
+
+    if (text.length > 600) {
+        alert('文本过长（超过600字），无法进行语音合成。');
+        return;
+    }
+
+    // 显式捕获 button 元素，防止 async/await 后 event 丢失
+    const btn = (event && event.target) ? event.target : null;
+    const originalBtnText = btn ? btn.innerText : '🔊 朗读';
+
+    if (btn) {
+        btn.innerText = '⏳ 请求中...';
+        btn.disabled = true;
+    }
+
+    try {
+        const response = await fetch('/api/v1/rewrite/tts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                text: text,
+                model: 'qwen3-tts-flash',
+                voice: 'Cherry'
+            })
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`TTS 请求失败: ${response.status} ${errText}`);
+        }
+
+        const data = await response.json();
+
+        if (data.audio_url) {
+            // 请求成功，立即恢复按钮状态
+            if (btn) {
+                btn.innerText = originalBtnText;
+                btn.disabled = false;
+            }
+
+            // 创建或更新音频播放器
+            let audioPlayer = header.querySelector('.tts-player');
+            if (!audioPlayer) {
+                audioPlayer = document.createElement('audio');
+                audioPlayer.className = 'tts-player';
+                audioPlayer.controls = true;
+                audioPlayer.style.marginTop = '10px';
+                audioPlayer.style.width = '100%';
+                // 插入到 header 末尾
+                header.parentNode.insertBefore(audioPlayer, header.nextSibling);
+            }
+
+            audioPlayer.src = data.audio_url;
+            audioPlayer.style.display = 'block';
+
+            // 尝试自动播放
+            try {
+                await audioPlayer.play();
+            } catch (playErr) {
+                console.warn('Auto-play failed:', playErr);
+            }
+        } else {
+            alert('TTS 请求成功，但未返回音频 URL');
+        }
+
+    } catch (error) {
+        console.error('getTTSResult error:', error);
+        alert('朗读请求出错: ' + error.message);
+    } finally {
+        // 恢复按钮状态
+        if (btn) {
+            btn.innerText = originalBtnText;
+            btn.disabled = false;
+        }
+    }
+}

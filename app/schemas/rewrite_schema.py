@@ -35,3 +35,30 @@ class RewriteResponse(BaseModel):
     original: str
     summary: str
     rewritten: str
+
+
+class LLMResponse(BaseModel):
+    """
+    模型结构化输出的响应模型。
+    """
+
+    rewritten: str = Field(..., description="洗稿文章")
+    summary: str = Field(..., description="洗稿概要")
+
+
+class TTSRequest(BaseModel):
+    """
+    TTS请求模型。
+    """
+
+    text: str = Field(..., description="需要朗读的文本内容")
+    model: str = Field(default="qwen3-tts-flash", description="TTS模型")
+    voice: str = Field(default="Cherry", description="语音音色")
+
+
+class TTSResponse(BaseModel):
+    """
+    TTS响应模型。
+    """
+
+    audio_url: str = Field(..., description="音频文件的URL")

@@ -31,7 +31,7 @@ header {
 header h1 {
     font-size: 2.5rem;
     margin-bottom: 10px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 header p {
@@ -43,7 +43,7 @@ main {
     background: white;
     border-radius: 15px;
     padding: 30px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
 /* 左右布局 */
@@ -53,7 +53,8 @@ main {
     gap: 24px;
 }
 
-.left-pane, .right-pane {
+.left-pane,
+.right-pane {
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -72,7 +73,8 @@ h2 {
 }
 
 /* 标签页样式 */
-.input-tabs, .result-tabs {
+.input-tabs,
+.result-tabs {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
@@ -103,6 +105,7 @@ h2 {
 .panel-actions {
     margin-top: 10px;
 }
+
 .add-btn {
     padding: 8px 12px;
     background: #667eea;
@@ -112,6 +115,7 @@ h2 {
     cursor: pointer;
     font-size: 14px;
 }
+
 .add-btn:hover {
     background: #5468e0;
 }
@@ -198,6 +202,7 @@ h2 {
     border-radius: 12px;
     padding: 16px;
 }
+
 .link-input-card input[type="url"] {
     width: 100%;
     padding: 16px 18px;
@@ -205,6 +210,7 @@ h2 {
     border-radius: 10px;
     font-size: 16px;
 }
+
 .link-input-card input[type="url"]:focus {
     outline: none;
     border-color: #667eea;
@@ -271,8 +277,10 @@ h2 {
     width: 24px;
     border: none;
     border-radius: 4px;
-    background: #e6f0ff; /* 浅蓝背景 */
-    color: #1e40af; /* 深蓝箭头 */
+    background: #e6f0ff;
+    /* 浅蓝背景 */
+    color: #1e40af;
+    /* 深蓝箭头 */
     cursor: pointer;
     font-size: 16px;
     line-height: 24px;
@@ -284,7 +292,8 @@ h2 {
 }
 
 .prompt-dropdown-btn:hover {
-    background: #d6e4ff; /* hover 更明显 */
+    background: #d6e4ff;
+    /* hover 更明显 */
     color: #1e3a8a;
 }
 
@@ -298,12 +307,13 @@ h2 {
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
     padding: 8px;
     display: grid;
     grid-template-columns: 1fr;
     gap: 6px;
-    max-height: 192px; /* 约4项高度 */
+    max-height: 192px;
+    /* 约4项高度 */
     overflow-y: auto;
     overscroll-behavior: contain;
 }
@@ -311,21 +321,25 @@ h2 {
 /* 给 prompt 文本域右侧留出空间给下拉箭头 */
 .prompt-wrapper textarea#promptInput {
     width: 100%;
-    padding-right: 44px; /* 为内置箭头预留空间，保持原宽度视觉 */
+    padding-right: 44px;
+    /* 为内置箭头预留空间，保持原宽度视觉 */
 }
 
 /* 自定义滚动条（WebKit） */
 .preset-dropdown::-webkit-scrollbar {
     width: 8px;
 }
+
 .preset-dropdown::-webkit-scrollbar-track {
     background: #f1f5f9;
     border-radius: 8px;
 }
+
 .preset-dropdown::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 8px;
 }
+
 .preset-dropdown::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
 }
@@ -438,17 +452,20 @@ input[type="range"]::-moz-range-thumb {
     border-radius: 12px;
     padding: 12px;
 }
+
 .queue-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 8px;
 }
+
 .queue-header h3 {
     margin: 0;
     font-size: 16px;
     color: #4a5568;
 }
+
 .queue-clear-btn {
     background: #fff;
     border: 1px solid #e2e8f0;
@@ -457,6 +474,7 @@ input[type="range"]::-moz-range-thumb {
     font-size: 12px;
     cursor: pointer;
 }
+
 .queue-list {
     display: flex;
     flex-direction: column;
@@ -464,11 +482,13 @@ input[type="range"]::-moz-range-thumb {
     max-height: 420px;
     overflow: auto;
 }
+
 .queue-empty {
     color: #718096;
     font-size: 14px;
     padding: 8px 0;
 }
+
 .queue-item {
     display: flex;
     align-items: center;
@@ -478,6 +498,7 @@ input[type="range"]::-moz-range-thumb {
     padding: 10px;
     background: #fff;
 }
+
 .queue-item .qi-icon {
     width: 28px;
     height: 28px;
@@ -491,16 +512,19 @@ input[type="range"]::-moz-range-thumb {
     font-size: 14px;
     flex: 0 0 28px;
 }
+
 .queue-item .qi-body {
     flex: 1;
     min-width: 0;
 }
+
 .qi-title {
     font-size: 14px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
 .qi-meta {
     color: #718096;
     font-size: 12px;
@@ -508,6 +532,7 @@ input[type="range"]::-moz-range-thumb {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
 .queue-item .qi-del {
     background: #fff;
     border: 1px solid #e2e8f0;
@@ -517,6 +542,7 @@ input[type="range"]::-moz-range-thumb {
     cursor: pointer;
     flex: 0 0 auto;
 }
+
 .queue-item .qi-del:hover {
     color: #ef4444;
     border-color: #f3c7c7;
@@ -543,8 +569,13 @@ input[type="range"]::-moz-range-thumb {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* 结果面板 */
@@ -639,20 +670,20 @@ input[type="range"]::-moz-range-thumb {
     .container {
         padding: 10px;
     }
-    
+
     main {
         padding: 20px;
     }
-    
+
     .compare-content {
         grid-template-columns: 1fr;
     }
-    
+
     .result-header {
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     .result-actions {
         justify-content: center;
     }
@@ -841,13 +872,11 @@ input[type="range"]::-moz-range-thumb {
     left: 0;
     right: 0;
     height: 1px;
-    background: repeating-linear-gradient(
-        to right,
-        #ccc 0px,
-        #ccc 8px,
-        transparent 8px,
-        transparent 16px
-    );
+    background: repeating-linear-gradient(to right,
+            #ccc 0px,
+            #ccc 8px,
+            transparent 8px,
+            transparent 16px);
     border-bottom: 1px dashed #ccc;
 }
 
@@ -929,6 +958,7 @@ input[type="range"]::-moz-range-thumb {
 .paragraph-block[data-side="left"]::before {
     background: #e2e8f0;
 }
+
 .paragraph-block[data-side="right"]::before {
     background: #d1fae5;
     border-color: #a7f3d0;
@@ -963,13 +993,11 @@ input[type="range"]::-moz-range-thumb {
 
 .paragraph-separator {
     height: 1px;
-    background: repeating-linear-gradient(
-        to right,
-        #cbd5e0 0px,
-        #cbd5e0 8px,
-        transparent 8px,
-        transparent 16px
-    );
+    background: repeating-linear-gradient(to right,
+            #cbd5e0 0px,
+            #cbd5e0 8px,
+            transparent 8px,
+            transparent 16px);
     margin: 20px 0;
     width: 100%;
 }
@@ -979,40 +1007,107 @@ input[type="range"]::-moz-range-thumb {
     .compare-content {
         flex-direction: column;
     }
-    
+
     .compare-column h3 {
         border-right: none;
         border-left: none;
         border-bottom: 1px solid #e2e8f0;
     }
-    
+
     .compare-column:last-child h3 {
         border-left: none;
         border-top: 1px solid #e2e8f0;
     }
-    
+
     .paragraph-pair {
         grid-template-columns: 1fr;
         gap: 0;
     }
-    
+
     .paragraph-original {
         border-right: none;
         border-bottom: 1px solid #e2e8f0;
         background: #f8f9fa;
     }
-    
+
     .paragraph-rewritten {
         background: white;
     }
-    
+
     .paragraph-content {
         padding: 15px;
     }
-    
+
     .paragraph-pair::before {
         top: 5px;
         left: 5px;
         font-size: 9px;
     }
+}
+
+/* Summary Section inside Rewritten Panel */
+.summary-section {
+    margin-bottom: 25px;
+}
+
+.summary-section h3 {
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+    color: #4a5568;
+    display: flex;
+    align-items: center;
+}
+
+.summary-section h3::before {
+    content: '💡';
+    display: inline-block;
+    margin-right: 8px;
+    font-size: 1.2em;
+}
+
+.summary-box {
+    min-height: 100px;
+    background: #fff;
+    border-left: 4px solid #667eea;
+    border-radius: 4px 6px 6px 4px;
+}
+
+/* Input Section Specifics */
+.input-section h2 {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 8px;
+}
+
+/* Refactored inline styles */
+.input-intro-text {
+    color: #64748b;
+    margin-bottom: 25px;
+    /* Increase space after line */
+    font-size: 0.95rem;
+    line-height: 1.5;
+    background: #f8fafc;
+    padding: 10px 15px;
+    border-radius: 6px;
+    border-left: 4px solid #cbd5e1;
+    /* Move the separator line here? Or just use this box style? */
+    /* The user asked to put it between h2 and line.
+       If I use a box style, it effectively separates h2 and content.
+       Let's try to mimic the user's specific request visually:
+       H2
+       Text
+       Line
+    */
+    background: transparent;
+    border-radius: 0;
+    border-left: none;
+    padding: 0 0 15px 0;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+
+.coming-soon-placeholder {
+    text-align: center;
+    padding: 50px;
+    color: #718096;
 }

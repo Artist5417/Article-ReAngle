@@ -14,6 +14,8 @@ from app.schemas.rewrite_schema import (
     RewriteResponse,
     TTSRequest,
     TTSResponse,
+    AvatarRequest,
+    AvatarResponse,
 )
 from app.services.extractors import (
     extract_text_from_url,
@@ -21,7 +23,7 @@ from app.services.extractors import (
     extract_text_from_pdf,
     extract_text_from_image,
 )
-from app.services.llms import rewriting_client, tts_client
+from app.services.llms import rewriting_client, tts_client, avatar_client
 from app.core.exceptions import (
     ContentExtractionError,
     LLMProviderError,
@@ -234,3 +236,20 @@ async def get_tts_result(request: TTSRequest):
     except Exception as e:
         logger.error(f"TTS request failed: {e}")
         raise LLMProviderError(f"TTS generation failed: {str(e)}")
+
+
+@rewrite_router.post("/avatar", response_model=AvatarResponse)
+async def get_avatar_result(request: AvatarRequest):
+    """
+    数字人接口
+    """
+    logger.info(f"Received avatar request for text length: {len(request.text)}")
+
+    try:
+        video_url = await avatar_client.get_avatar_result(
+            text=request.text,
+        )
+        return AvatarResponse(video_url=video_url)
+    except Exception as e:
+        logger.error(f"Avatar request failed: {e}")
+        raise LLMProviderError(f"Avatar generation failed: {str(e)}")

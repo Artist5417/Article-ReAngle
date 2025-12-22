@@ -62,3 +62,19 @@ class TTSResponse(BaseModel):
     """
 
     audio_url: str = Field(..., description="音频文件的URL")
+
+
+class AvatarRequest(BaseModel):
+    """
+    数字人请求模型。
+    """
+
+    text: str = Field(..., description="数字人文本")
+
+
+class AvatarResponse(BaseModel):
+    """
+    数字人响应模型。
+    """
+
+    video_url: str = Field(..., description="数字人视频URL")

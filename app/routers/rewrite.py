@@ -19,6 +19,7 @@ from app.services.extractors import (
     extract_text_from_url,
     extract_text_from_docx,
     extract_text_from_pdf,
+    extract_text_from_image,
 )
 from app.services.llms import rewriting_client, tts_client
 from app.core.exceptions import (
@@ -131,6 +132,8 @@ async def rewrite_article(
                     extracted = await extract_text_from_docx(upload)
                 elif filename.endswith(".pdf"):
                     extracted = await extract_text_from_pdf(upload)
+                elif filename.endswith((".png", ".jpg", ".jpeg", ".webp")):
+                    extracted = await extract_text_from_image(upload)
                 else:
                     raw = await upload.read()
                     try:

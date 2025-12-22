@@ -18,6 +18,7 @@ from app.services.extractors import (
     extract_text_from_docx,
     extract_text_from_pdf,
     extract_text_from_image,
+    ingest_youtube_url,
 )
 from app.services.llms import rewriting_client
 from app.core.exceptions import (
@@ -106,7 +107,28 @@ async def rewrite_article(request: Request, rewrite_request: Annotated[RewriteRe
         elif t == "youtube":
             yt = (it.get("content") or "").strip()
             if yt:
-                parts.append(f"[YouTube]\n{yt}")
+                try:
+                    yt_res = await ingest_youtube_url(yt, prefer_langs=["zh","en"], fallback_any_language=True)
+                    yt_text = (yt_res.get("text") or "").strip()
+                    meta = yt_res.get("meta") or {}
+                    parts.append(
+                        "[YouTube]\n源: {}\n标题: {}\n时长: {}秒\n字幕: {} ({})\n{}\n".format(
+                            yt,
+                            meta.get("title") or "",
+                            meta.get("duration") or 0,
+                            meta.get("transcript_type") or "",
+                            meta.get("lang") or "",
+                            yt_text,
+                        )
+                    )
+                except Exception as e:
+                    logger.warning(
+                        "[rewrite] youtube ingestion failed | request_id={} | url={} | reason={}",
+                        request_id,
+                        yt,
+                        e,
+                    )
+                    parts.append(f"[YouTube]\n{yt}")
         elif t == "file":
             content_key = it.get("contentKey")
             if not content_key:

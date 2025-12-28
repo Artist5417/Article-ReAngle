@@ -29,11 +29,8 @@ async def get_rewriting_result(
             f"Processing rewrite request with provider: {llm_type.name}, model: {model}"
         )
 
-        result_text = ""
-
         # 根据模型选择调用对应client
         if llm_type == LLMType.OPENAI:
-            # OpenAI now returns an LLMResponse object directly
             return await openai_client.get_rewriting_result(
                 instruction=instruction,
                 source=source,
@@ -41,32 +38,20 @@ async def get_rewriting_result(
             )
 
         elif llm_type == LLMType.GEMINI:
-            response = await gemini_client.get_rewriting_result(
+            return await gemini_client.get_rewriting_result(
                 instruction=instruction,
                 source=source,
                 model=model,
             )
-            # 从GenerateContentResponse对象中提取文本
-            result_text = response.text
 
         elif llm_type == LLMType.QWEN:
-            completion = await qwen_client.get_rewriting_result(
+            return await qwen_client.get_rewriting_result(
                 instruction=instruction,
                 source=source,
                 model=model,
             )
-            # 从Completion对象中提取文本
-            result_text = completion.choices[0].message.content
 
-        if not result_text:
-            logger.warning(f"Provider {llm_type.name} returned empty text")
-            raise LLMProviderError(f"Received empty response from {llm_type.name}")
-
-        logger.info(
-            f"Rewrite completed successfully. Output length: {len(result_text)}"
-        )
-        # Wrap simple text response into LLMResponse
-        return LLMResponse(rewritten=result_text, summary="")
+        raise LLMProviderError(f"Unsupported LLM type: {llm_type.name}")
 
     except LLMProviderError:
         raise

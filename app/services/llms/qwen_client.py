@@ -1,21 +1,19 @@
-"""
-使用Qwen洗稿，通过OpenAI SDK调用
-"""
-
 import os
 import yaml
+import json
 from openai import OpenAI
 from loguru import logger
 
 from app.configs.settings import SYSTEM_PROMPTS_DIR
 from app.core.exceptions import LLMProviderError
+from app.schemas.rewrite_schema import LLMResponse
 
 
 async def get_rewriting_result(
     instruction: str,
     source: str,
     model: str = "qwen-flash",
-):
+) -> LLMResponse:
     """
     调用 OpenAI Completions API (Qwen) 洗稿。
 
@@ -25,7 +23,7 @@ async def get_rewriting_result(
         model: 模型选择，默认为qwen-flash
 
     Returns:
-        OpenAI Completion 对象
+        LLMResponse: 包含洗稿结果和摘要的对象
     """
     try:
         logger.info(f"Calling Qwen API (model: {model})")
@@ -73,9 +71,28 @@ async def get_rewriting_result(
                     "content": source,
                 },
             ],
+            response_format={
+                "type": "json_object"
+            },  # 指定返回JSON格式，确保输出结构化数据
         )
         logger.info("Qwen API request successful")
-        return completion
+
+        # Parse JSON response
+        try:
+            content = completion.choices[0].message.content
+            data = json.loads(content)
+            return LLMResponse(
+                rewritten=data.get("article", ""), summary=data.get("summary", "")
+            )
+        except Exception as e:
+            logger.error(f"Failed to parse Qwen JSON response: {e}")
+            return LLMResponse(
+                rewritten=completion.choices[0].message.content, summary=""
+            )
+
+    except Exception as e:
+        logger.exception("Qwen API call failed")
+        raise LLMProviderError(f"Qwen API error: {str(e)}")
 
     except Exception as e:
         logger.exception("Qwen API call failed")

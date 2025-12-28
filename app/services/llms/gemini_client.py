@@ -4,18 +4,20 @@
 
 import os
 import yaml
+import json
 from google import genai
 from loguru import logger
 
 from app.configs.settings import SYSTEM_PROMPTS_DIR
 from app.core.exceptions import LLMProviderError
+from app.schemas.rewrite_schema import LLMResponse
 
 
 async def get_rewriting_result(
     instruction: str,
     source: str,
     model: str = "gemini-2.5-flash",
-):
+) -> LLMResponse:
     """
     调用 Gemini API 洗稿。
 
@@ -60,10 +62,14 @@ async def get_rewriting_result(
         response = client.models.generate_content(
             model=model,
             contents=combined_content,
+            config={
+                "response_mime_type": "application/json",
+                "response_json_schema": LLMResponse.model_json_schema(),
+            },
         )
         logger.info("Gemini API request successful")
 
-        return response
+        return LLMResponse.model_validate_json(response.text)
 
     except Exception as e:
         logger.exception("Gemini API call failed")

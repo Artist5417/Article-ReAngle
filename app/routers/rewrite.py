@@ -12,6 +12,10 @@ from loguru import logger
 from app.schemas.rewrite_schema import (
     RewriteRequest,
     RewriteResponse,
+    TTSRequest,
+    TTSResponse,
+    AvatarRequest,
+    AvatarResponse,
 )
 from app.services.extractors import (
     extract_text_from_url,
@@ -19,7 +23,7 @@ from app.services.extractors import (
     extract_text_from_pdf,
     extract_text_from_image,
 )
-from app.services.llms import rewriting_client
+from app.services.llms import rewriting_client, tts_client, avatar_client
 from app.core.exceptions import (
     ContentExtractionError,
     LLMProviderError,
@@ -31,11 +35,15 @@ rewrite_router = APIRouter(prefix="/rewrite")
 
 
 @rewrite_router.post("", response_model=RewriteResponse)
-async def rewrite_article(request: Request, rewrite_request: Annotated[RewriteRequest, Form()]):
+async def rewrite_article(
+    request: Request, rewrite_request: Annotated[RewriteRequest, Form()]
+):
     """
-    改写文章/洗稿接口（添加到队列的多重输入）。
+    洗稿接口, 支持添加到队列的多重输入
     """
+    # 储存清洗、聚合后的原始文本
     clean_text = ""
+
     # 贯穿整个请求的 request_id 与耗时统计
     request_id = request.headers.get("X-Request-Id") or str(uuid4())
     t0 = time.perf_counter()
@@ -59,7 +67,8 @@ async def rewrite_article(request: Request, rewrite_request: Annotated[RewriteRe
             e,
         )
         raise ContentExtractionError(
-            "Invalid inputs format", details={"request_id": request_id, "reason": str(e)}
+            "Invalid inputs format",
+            details={"request_id": request_id, "reason": str(e)},
         )
     # 入参概要日志
     type_counts = {"text": 0, "url": 0, "file": 0, "youtube": 0}
@@ -143,7 +152,11 @@ async def rewrite_article(request: Request, rewrite_request: Annotated[RewriteRe
                 )
                 raise ContentExtractionError(
                     f"Failed to extract content from file: {str(e)}",
-                    details={"request_id": request_id, "filename": filename, "reason": str(e)},
+                    details={
+                        "request_id": request_id,
+                        "filename": filename,
+                        "reason": str(e),
+                    },
                 )
         else:
             logger.warning(f"Unknown input type: {t}")
@@ -168,7 +181,7 @@ async def rewrite_article(request: Request, rewrite_request: Annotated[RewriteRe
             source_len,
         )
         t_llm_start = time.perf_counter()
-        rewritten = await rewriting_client.get_rewriting_result(
+        result = await rewriting_client.get_rewriting_result(
             llm_type=rewrite_request.llm_type,
             instruction=rewrite_request.prompt,
             source=clean_text,
@@ -200,7 +213,43 @@ async def rewrite_article(request: Request, rewrite_request: Annotated[RewriteRe
         # 原始文本
         original=clean_text,
         # 摘要
-        summary=clean_text,
+        summary=result.summary,
         # 洗稿后的文本
-        rewritten=rewritten,
+        rewritten=result.rewritten,
     )
+
+
+@rewrite_router.post("/tts", response_model=TTSResponse)
+async def get_tts_result(request: TTSRequest):
+    """
+    TTS接口
+    """
+    logger.info(f"Received TTS request for text length: {len(request.text)}")
+
+    try:
+        audio_url = await tts_client.get_tts_result(
+            text=request.text,
+            voice=request.voice,
+            model=request.model,
+        )
+        return TTSResponse(audio_url=audio_url)
+    except Exception as e:
+        logger.error(f"TTS request failed: {e}")
+        raise LLMProviderError(f"TTS generation failed: {str(e)}")
+
+
+@rewrite_router.post("/avatar", response_model=AvatarResponse)
+async def get_avatar_result(request: AvatarRequest):
+    """
+    数字人接口
+    """
+    logger.info(f"Received avatar request for text length: {len(request.text)}")
+
+    try:
+        video_url = await avatar_client.get_avatar_result(
+            text=request.text,
+        )
+        return AvatarResponse(video_url=video_url)
+    except Exception as e:
+        logger.error(f"Avatar request failed: {e}")
+        raise LLMProviderError(f"Avatar generation failed: {str(e)}")

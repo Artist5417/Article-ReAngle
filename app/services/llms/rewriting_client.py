@@ -3,7 +3,7 @@
 """
 
 from loguru import logger
-from app.schemas.rewrite_schema import LLMType
+from app.schemas.rewrite_schema import LLMType, LLMResponse
 from app.services.llms import openai_client, gemini_client, qwen_client
 from app.core.exceptions import LLMProviderError
 
@@ -12,7 +12,7 @@ async def get_rewriting_result(
     llm_type: LLMType,
     instruction: str,
     source: str,
-) -> str:
+) -> LLMResponse:
     """
     根据用户选择模型调用对应client，并处理response结果。
     Args:
@@ -20,7 +20,7 @@ async def get_rewriting_result(
         instruction: 用户输入的洗稿方式或选择的洗稿风格预设
         source: 原始文章
     Returns:
-        str: 从response中提取的洗稿结果文本
+        LLMResponse: 包含洗稿结果和摘要的对象
     """
     try:
         # 获取模型名称
@@ -29,15 +29,16 @@ async def get_rewriting_result(
             f"Processing rewrite request with provider: {llm_type.name}, model: {model}"
         )
 
+        result_text = ""
+
         # 根据模型选择调用对应client
         if llm_type == LLMType.OPENAI:
-            response = await openai_client.get_rewriting_result(
+            # OpenAI now returns an LLMResponse object directly
+            return await openai_client.get_rewriting_result(
                 instruction=instruction,
                 source=source,
                 model=model,
             )
-            # 从Response对象中提取文本
-            rewritten_text = response.output_text
 
         elif llm_type == LLMType.GEMINI:
             response = await gemini_client.get_rewriting_result(
@@ -46,7 +47,7 @@ async def get_rewriting_result(
                 model=model,
             )
             # 从GenerateContentResponse对象中提取文本
-            rewritten_text = response.text
+            result_text = response.text
 
         elif llm_type == LLMType.QWEN:
             completion = await qwen_client.get_rewriting_result(
@@ -55,16 +56,17 @@ async def get_rewriting_result(
                 model=model,
             )
             # 从Completion对象中提取文本
-            rewritten_text = completion.choices[0].message.content
+            result_text = completion.choices[0].message.content
 
-        if not rewritten_text:
+        if not result_text:
             logger.warning(f"Provider {llm_type.name} returned empty text")
             raise LLMProviderError(f"Received empty response from {llm_type.name}")
 
         logger.info(
-            f"Rewrite completed successfully. Output length: {len(rewritten_text)}"
+            f"Rewrite completed successfully. Output length: {len(result_text)}"
         )
-        return rewritten_text
+        # Wrap simple text response into LLMResponse
+        return LLMResponse(rewritten=result_text, summary="")
 
     except LLMProviderError:
         raise

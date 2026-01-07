@@ -68,10 +68,10 @@ def get_api_key_from_payload(payload: dict) -> str:
 
 def build_story_output_body(
     story_obj: dict,
-    title_hint: str | None,
-    length: str | None,
-    age: str | None,
-    theme: str | None,
+    title_hint: Optional[str],
+    length: Optional[str],
+    age: Optional[str],
+    theme: Optional[str],
     client: dict,
 ) -> dict:
     """

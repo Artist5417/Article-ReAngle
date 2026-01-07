@@ -8,6 +8,7 @@ build/
 dist/
 *.egg-info/
 *.egg
+.pytest_cache/
 
 # Virtual environments
 venv/
@@ -23,13 +24,20 @@ venv.bak/
 .env.development.local
 .env.test.local
 .env.production.local
+*.local
 
 # IDE
 .vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
 .idea/
 *.swp
 *.swo
 *~
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
 
 # OS
 .DS_Store
@@ -42,9 +50,17 @@ Thumbs.db
 # Logs
 *.log
 logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
 # JavaScript dependencies
 node_modules/
+
+# Build artifacts
+dist-ssr/
 
 # Temporary folders
 tmp/

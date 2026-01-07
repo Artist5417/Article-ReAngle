@@ -19,7 +19,7 @@ system_prompt: |
   - If added information is used, attribute it clearly
 
   Output requirements:
-  - Provide a rewritten article and a concise summary (should be less than 100 words).
+  - Provide a rewritten article and a concise summary (should be less than 600 characters).
   - The output will be structurally enforced, so focus on content quality.
   - Be neutral and accurate unless the instruction requires a specific perspective
   - Provide essential context as needed

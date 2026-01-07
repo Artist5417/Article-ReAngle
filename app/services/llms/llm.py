@@ -8,8 +8,11 @@ import requests
 from app.configs.settings import OPENAI_BASE_URL, DEFAULT_MODEL
 
 
+from typing import Optional
+
+
 async def call_openai(
-    messages: list, model: str = DEFAULT_MODEL, api_key: str | None = None
+    messages: list, model: str = DEFAULT_MODEL, api_key: Optional[str] = None
 ) -> str:
     """
     使用 OpenAI API (Legacy)

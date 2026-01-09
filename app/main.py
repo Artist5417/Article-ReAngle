@@ -8,9 +8,8 @@ import uvicorn
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import RequestValidationError
+
 
 from app.configs.settings import STATIC_DIR
 from app.routers import v1_routers
@@ -43,33 +42,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # 注册异常处理器
 app.add_exception_handler(AppException, app_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, global_exception_handler)
 
-# 配置前端静态文件
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-
 # 注册路由
 app.include_router(v1_routers)
 
 
-# 主界面端点
-@app.get("/", response_class=HTMLResponse)
-async def read_root():
+# API 健康检查
+@app.get("/")
+async def health_check():
     """
-    返回主页 HTML。
+    Health Check endpoint.
+    Frontend is hosted separately.
     """
-    try:
-        index_path = os.path.join(STATIC_DIR, "index.html")
-        with open(index_path, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
-    except FileNotFoundError:
-        return HTMLResponse(
-            content="<h1>Article ReAngle</h1><p>Frontend files not found. Please check the file path.</p>",
-            status_code=404,
-        )
+    return {"status": "ok", "service": "Article ReAngle API"}
 
 
 if __name__ == "__main__":

@@ -1,16 +1,25 @@
 services:
+  # Backend API
   - type: web
-    name: article-reangle
+    name: article-reangle-api
     runtime: python
-    plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.12.6
       - key: OPENAI_API_KEY
         sync: false
       - key: GEMINI_API_KEY
         sync: false
       - key: DASHSCOPE_API_KEY
         sync: false
+
+  # Frontend Static Site
+  - type: web
+    name: article-reangle-frontend
+    runtime: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
